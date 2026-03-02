@@ -190,7 +190,7 @@ def _validate_hooks(model: HookedTransformer) -> None:
     test_hooks = [
         "blocks.0.hook_resid_post",
         "blocks.0.hook_mlp_out",
-        "blocks.0.attn.hook_result",
+        "blocks.0.hook_attn_out",
     ]
     available = set(model.hook_dict.keys()) if hasattr(model, "hook_dict") else set()
 
