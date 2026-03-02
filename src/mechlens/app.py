@@ -417,7 +417,14 @@ def create_app() -> gr.Blocks:
     
     with gr.Blocks(
         title="MechLens - Mechanistic Interpretability Tool",
-        theme=gr.themes.Soft()
+        theme=gr.themes.Base(
+            font=[gr.themes.GoogleFont("Inter"), "ui-sans-serif", "system-ui", "sans-serif"],
+            font_mono=[gr.themes.GoogleFont("JetBrains Mono"), "ui-monospace", "Consolas", "monospace"],
+        ),
+        css="""
+        .gradio-container { max-width: 1400px !important; }
+        .markdown-text h1 { font-size: 1.75rem !important; font-weight: 600 !important; }
+        """
     ) as app:
         
         gr.Markdown("""
@@ -425,7 +432,7 @@ def create_app() -> gr.Blocks:
         
         A four-panel interface for analyzing and intervening in language model internals.
         
-        **Supported Models**: Qwen2.5-0.5B, Qwen2.5-7B, Llama-3.1-8B, Pythia-1.4B
+        **Supported Models**: Qwen2.5-0.5B, Qwen2.5-7B, Qwen2.5-14B, Llama-3.1-8B, Llama-2-7B, Mistral-7B, Pythia-1.4B
         """)
         
         # ==================== Panel 1: Input/Output ====================
