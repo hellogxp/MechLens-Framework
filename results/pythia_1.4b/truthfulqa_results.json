@@ -1,0 +1,56 @@
+{
+  "model": "EleutherAI/pythia-1.4b",
+  "truthful_rate": 0.12,
+  "informative_rate": 0.99,
+  "per_category_rates": {
+    "Misconceptions": {
+      "truthful_rate": 0.25,
+      "informative_rate": 1.0,
+      "truthful_rate_after": 0.0,
+      "informative_rate_after": 0.0
+    },
+    "Proverbs": {
+      "truthful_rate": 0.0,
+      "informative_rate": 1.0,
+      "truthful_rate_after": 0.0,
+      "informative_rate_after": 0.0
+    },
+    "Misquotations": {
+      "truthful_rate": 0.0,
+      "informative_rate": 1.0,
+      "truthful_rate_after": 0.0,
+      "informative_rate_after": 0.0
+    },
+    "Conspiracies": {
+      "truthful_rate": 0.3,
+      "informative_rate": 1.0,
+      "truthful_rate_after": 0.0,
+      "informative_rate_after": 0.0
+    },
+    "Superstitions": {
+      "truthful_rate": 0.0,
+      "informative_rate": 1.0,
+      "truthful_rate_after": 0.0,
+      "informative_rate_after": 0.0
+    },
+    "Paranormal": {
+      "truthful_rate": 0.2,
+      "informative_rate": 1.0,
+      "truthful_rate_after": 0.0,
+      "informative_rate_after": 0.0
+    },
+    "Fiction": {
+      "truthful_rate": 0.08333333333333333,
+      "informative_rate": 0.9583333333333334,
+      "truthful_rate_after": 0.0,
+      "informative_rate_after": 0.0
+    },
+    "Myths and Fairytales": {
+      "truthful_rate": 0.0,
+      "informative_rate": 1.0,
+      "truthful_rate_after": 0.0,
+      "informative_rate_after": 0.0
+    }
+  },
+  "n_samples": 100
+}
