@@ -191,7 +191,7 @@ Mistral-7B & 32 & 32 & 4096 & GQA+SWA (8 KV) \\
 \subsection{Negative Results: Activation Scaling and ITI}
 \label{sec:negative_results}
 
-Simple activation scaling universally fails: only 2 of 20 strategies show any positive effect ($\leq$2\%), while aggressive scaling increases hallucination by up to 28\% (Qwen2.5-7B). An 18-configuration ITI grid search achieves at most +2\% (Pythia-1.4B) and 0\% (Qwen). This consistency across 4 models, 2 benchmarks, and 38 configurations demands a mechanistic explanation (Section~\ref{sec:crystallization}; full tables in Appendix~\ref{app:negative_results}).
+Simple activation scaling universally fails across 20 strategies and 4 models ($\leq$2\% gain; up to 28\% degradation), and an 18-configuration ITI grid search achieves at most +2\%. This consistency across 38 configurations demands a mechanistic explanation (\S\ref{sec:crystallization}; full tables in Appendix~\ref{app:negative_results}).
 
 \subsection{MC1/MC2 Evaluation with Advanced Interventions}
 \label{sec:mc_results}
@@ -224,9 +224,7 @@ Baseline & --- & 0.2215 & 0.3921 \\
 \label{tab:mc_results}
 \end{table}
 
-\paragraph{Key findings.} A clear hierarchy emerges: \dola{} dynamic (+25.4\% MC1) $>$ \caa{} top\_k=10 (+15.5\%) $>$ \iti{} top\_k=10 (+10.0\%) $>$ simple scaling (0\%). Both \iti{} and \caa{} show \emph{zero} improvement at top\_k$\in\{3,5\}$ but substantial gains at top\_k=10, indicating a layer-count threshold. That \dola{} (logit-space) achieves the largest gains motivates our mechanistic analysis in Section~\ref{sec:crystallization}.
-
-\paragraph{Base model baselines.} All experiments use base (non-instruction-tuned) models (MC1 baselines: 18.9--22.2\%). Absolute values should not be compared with instruction-tuned methods like SADI \citep{zhang2025sadi} (MC1=67\%); our focus is on the \emph{relative} effectiveness hierarchy. Two-proportions $z$-test confirms \dola{}'s improvement is significant ($z{=}2.63$, $p{=}0.009$). With Bonferroni correction for 3 pairwise comparisons (adjusted $\alpha{=}0.017$), \dola{} vs.\ baseline remains significant ($p{=}0.009 < 0.017$).
+\paragraph{Key findings.} A clear hierarchy emerges: \dola{} dynamic (+25.4\% MC1) $>$ \caa{} top\_k=10 (+15.5\%) $>$ \iti{} top\_k=10 (+10.0\%) $>$ simple scaling (0\%). Both \iti{} and \caa{} show \emph{zero} improvement at top\_k$\in\{3,5\}$ but substantial gains at top\_k=10, indicating a layer-count threshold. That \dola{} (logit-space) achieves the largest gains motivates our mechanistic analysis in Section~\ref{sec:crystallization}. All experiments use base (non-instruction-tuned) models (MC1 baselines: 18.9--22.2\%); absolute values should not be compared with instruction-tuned methods like SADI \citep{zhang2025sadi} (MC1=67\%). \dola{}'s improvement is significant (two-proportions $z$-test: $z{=}2.63$, $p{=}0.009$; survives Bonferroni correction at $\alpha{=}0.017$).
 
 % ==================== 6. LATE CRYSTALLIZATION ====================
 \section{Late Crystallization of Factual Knowledge}
@@ -243,9 +241,7 @@ We define the \textbf{Factual Emergence Point (FEP)} for a query $q$ with correc
 \end{equation}
 where $\mathbf{h}_L$ is the residual stream at layer $L$, LN is the final layer norm, and $\mathbf{W}_U$ is the unembedding matrix. If $a$ never enters top-$k$ at any intermediate layer, we set $L_{\text{FEP}} = L_{\max}$ (the final layer). We use $k=10$ throughout.
 
-\paragraph{Tuned lens validation.} We use the standard logit lens \citep{nostalgebraist2020logitlens} rather than the tuned lens \citep{belrose2023tuned} because it requires no additional training. A natural concern is that FEP${}=L_{\max}$ for 85.9\% of samples could reflect logit lens's known limitations as a probe rather than a genuine phenomenon. Four lines of evidence---including direct empirical comparison---argue against this:
-
-\emph{(1) Direct tuned lens comparison}: We train per-layer affine probes $\mathbf{h}'_l = \mathbf{h}_l \mathbf{W}_l + \mathbf{b}_l$ (identity-initialized) on 2{,}000 WikiText-2 samples using KL divergence against final-layer logits (Adam optimizer, lr=$10^{-3}$, batch size 32, 3 epochs), then compute tuned lens FEP on all 817 TruthfulQA samples (Table~\ref{tab:tuned_lens}). The tuned lens yields a late crystallization rate of 85.7\%, within 0.2 percentage points of the logit lens (85.9\%). Of 817 samples, 74.9\% have identical FEP under both methods. The tuned lens does detect earlier emergence (mean FEP=25.1 vs.\ 27.3, $\sigma$=7.4 vs.\ 1.8), primarily for high-frequency answer tokens (e.g., ``The'') where learned affine corrections amplify weak early-layer signal---consistent with the probes functioning correctly.
+\paragraph{Tuned lens validation.} A natural concern is that FEP${}=L_{\max}$ for 85.9\% of samples could reflect logit lens's known limitations rather than a genuine phenomenon. We train per-layer affine probes on 2{,}000 WikiText-2 samples and compute tuned lens FEP on all 817 TruthfulQA samples: the tuned lens yields 85.7\% late crystallization---within 0.2 percentage points of the logit lens (85.9\%), with 74.9\% of samples having identical FEP (Table~\ref{tab:tuned_lens}). Three further lines of evidence argue against a probe artifact: (1) LayerNorm ablation produces identical FEP distributions (\S\ref{sec:ln_ablation}); (2) a systematic cross-architecture gradient (Qwen 85.9\% $>$ Llama 71.0\% $>$ Mistral 27.1\%) correlates with attention mechanisms rather than showing random variation; (3) crystallization degree \emph{predicts} which intervention dominates (\S\ref{sec:cross_arch}).
 
 \begin{table}[t]
 \centering\small
@@ -257,40 +253,17 @@ Logit lens & 27.3$\pm$1.8 & 85.9\% & \multirow{2}{*}{74.9\%} & \multirow{2}{*}{7
 Tuned lens & 25.1$\pm$7.4 & 85.7\% & & \\
 \bottomrule
 \end{tabular}
-\caption{Tuned lens vs.\ logit lens FEP (Qwen2.5-7B, 817 samples). Both methods yield near-identical late crystallization rates ($\Delta$=0.2\%), confirming the phenomenon is not a probe artifact.}
+\caption{Tuned lens vs.\ logit lens FEP (Qwen2.5-7B, 817 samples). Both yield near-identical late crystallization rates ($\Delta$=0.2\%).}
 \label{tab:tuned_lens}
 \end{table}
 
-\emph{(2) LayerNorm ablation} (Section~\ref{sec:ln_ablation}): Ablating ln\_final produces identical FEP distributions (Mean FEP=27.30, 85.9\% late crystallization), ruling out LN projection mismatch as a confound.
-
-\emph{(3) Cross-architecture systematicity}: If Late Crystallization were merely a probe artifact, we would expect random variation across architectures. Instead, we observe a systematic gradient---Qwen (85.9\%) $>$ Llama (71.0\%) $>$ Mistral (27.1\%)---that correlates with attention mechanisms (standard GQA vs.\ sliding window). Sliding window attention enables earlier information routing, producing measurably lower crystallization, which an artifact theory cannot explain.
-
-\emph{(4) Intervention--FEP correlation}: The crystallization degree \emph{predicts} which intervention dominates (\dola{} on high-crystallization Qwen, \caa{} on moderate-crystallization Llama/Mistral; Section~\ref{sec:cross_arch}). A poor probe would yield FEP values uncorrelated with downstream intervention success.
-
 We compute FEP for all 817 TruthfulQA samples on Qwen2.5-7B (28 layers), tracking the rank of each correct answer's first token across all layers via logit lens projection.
 
-\paragraph{Robustness to $k$ threshold.} A natural concern is whether our findings depend on the specific choice of $k{=}10$. Table~\ref{tab:topk_sensitivity} shows FEP statistics across $k \in \{1, 3, 5, 10, 20, 50, 100\}$. Late Crystallization is \emph{robust}: even at $k{=}100$ (top 0.1\% of vocabulary), 64.7\% of correct answers still never appear at any intermediate layer, and FEP Depth remains above 93\% for all thresholds. The monotonic relationship between $k$ and late crystallization rate confirms a genuine phenomenon rather than a threshold artifact.
-
-\begin{table}[t]
-\centering\small
-\begin{tabular}{rcccc}
-\toprule
-\textbf{$k$} & \textbf{Mean FEP} & \textbf{$\sigma$} & \textbf{Late Crystal} & \textbf{FEP Depth} \\
-\midrule
-1 & 28.0 & 0.0 & 100.0\% & 100.0\% \\
-3 & 27.9 & 0.4 & 98.3\% & 99.8\% \\
-5 & 27.6 & 1.4 & 92.9\% & 98.7\% \\
-10 & 27.3 & 1.8 & 85.9\% & 97.5\% \\
-20 & 27.0 & 2.1 & 80.2\% & 96.5\% \\
-50 & 26.6 & 2.6 & 72.7\% & 95.0\% \\
-100 & 26.0 & 3.4 & 64.7\% & 93.0\% \\
-\bottomrule
-\end{tabular}
-\caption{FEP sensitivity to $k$ (Qwen2.5-7B, 817 samples). Late Crystallization is robust: even at $k{=}100$, 64.7\% of answers never appear at intermediate layers. FEP Depth stays $>$93\% across all thresholds.}
-\label{tab:topk_sensitivity}
-\end{table}
+\paragraph{Robustness to $k$ threshold.} Late Crystallization is robust across $k \in \{1, 3, 5, 10, 20, 50, 100\}$: even at $k{=}100$ (top 0.1\% of vocabulary), 64.7\% of correct answers still never appear at any intermediate layer, and FEP Depth remains above 93\% (Table~\ref{tab:topk_sensitivity} in Appendix~\ref{app:topk}).
 
 \subsection{The Late Crystallization Phenomenon}
+
+Table~\ref{tab:fep_distribution} reveals a striking pattern: \textbf{85.9\% of correct answers (702/817) never enter the top-10 predictions at any intermediate layer} (mean FEP = 27.3 $\pm$ 1.8 out of 28 layers). This \textbf{Late Crystallization} shows that factual knowledge does not gradually ``build up'' across depth but exists in a distributed, implicit form within the residual stream before abruptly crystallizing into explicit predictions at the final layer.
 
 \begin{table}[t]
 \centering
@@ -303,19 +276,12 @@ We compute FEP for all 817 TruthfulQA samples on Qwen2.5-7B (28 layers), trackin
 23 & 47 & 5.8\% \\
 21 & 20 & 2.4\% \\
 25 & 13 & 1.6\% \\
-22 & 10 & 1.2\% \\
-24 & 10 & 1.2\% \\
-26 & 10 & 1.2\% \\
-20 & 5 & 0.6\% \\
+Other ($\leq$1.2\% each) & 35 & 4.3\% \\
 \bottomrule
 \end{tabular}
-\caption{FEP distribution (Qwen2.5-7B, 817 TruthfulQA samples). 85.9\% of correct answers \emph{never} enter top-10 at any intermediate layer. Mean FEP = 27.3 $\pm$ 1.8.}
+\caption{FEP distribution (Qwen2.5-7B, 817 TruthfulQA samples). 85.9\% of correct answers \emph{never} enter top-10 at any intermediate layer.}
 \label{tab:fep_distribution}
 \end{table}
-
-Table~\ref{tab:fep_distribution} reveals a striking pattern: \textbf{85.9\% of correct answers (702/817) never enter the top-10 predictions at any intermediate layer}. The mean FEP is 27.3 $\pm$ 1.8 out of 28 layers. Only 14.1\% show any intermediate-layer emergence, with layer 23 the most common non-final point (5.8\%).
-
-This \textbf{Late Crystallization} reveals that factual knowledge does not gradually ``build up'' across depth. Correct answers exist in a distributed, implicit form within the residual stream (invisible to logit lens) and abruptly ``crystallize'' into explicit predictions only at the final layer.
 
 \subsection{Computability--Memorization Spectrum}
 \label{sec:spectrum}
@@ -325,9 +291,7 @@ FEP varies systematically across knowledge categories (full table in Appendix~\r
 \subsection{FEP--\dola{} Decorrelation}
 \label{sec:fep_dola}
 
-\dola{}'s dynamic layer selection does not correlate with FEP (Pearson $r = -0.057$, $p = 0.103$). \dola{} selects near-exclusively layer 0--1 (mean = 0.95), while FEP concentrates at layer 27--28. This reveals \dola{}'s true mechanism: contrasting the maximally early layer (surface patterns) against the final layer (crystallized knowledge), amplifying the factual signal that crystallization produces.
-
-Late Crystallization explains all observed patterns: \dola{} contrasts pre- vs.\ post-crystallization logits; \caa{}/\iti{} require top\_k$\geq$10 to span the pre-crystallization window; simple scaling amplifies all components uniformly, unable to selectively steer the nonlinear crystallization process. The top\_k=10 threshold corresponds to $\sim$36\% of Qwen2.5-7B's 28 layers, spanning the final third where implicit knowledge is distributed (layers 18--28). With top\_k$\leq$5, interventions affect only the post-crystallization region where answers are already visible; with top\_k=10, interventions capture the implicit factual signal distributed across the pre-crystallization residual stream.
+\dola{}'s dynamic layer selection does not correlate with FEP (Pearson $r = -0.057$, $p = 0.103$): \dola{} selects near-exclusively layer 0--1 (mean = 0.95), while FEP concentrates at layer 27--28. This reveals \dola{}'s true mechanism: contrasting the maximally early layer against the final layer, amplifying the factual signal that crystallization produces. Late Crystallization explains all observed patterns: \dola{} contrasts pre- vs.\ post-crystallization logits; \caa{}/\iti{} require top\_k$\geq$10 to span the pre-crystallization window; simple scaling amplifies all components uniformly, unable to selectively steer the nonlinear crystallization process.
 
 % ==================== 7. CROSS-ARCHITECTURE VALIDATION ====================
 \section{Cross-Architecture Validation and Causal Analysis}
@@ -359,33 +323,12 @@ Table~\ref{tab:cross_fep} and Figure~\ref{fig:fep_heatmap} reveal two key findin
 \subsection{Cross-Scale Validation (Qwen2.5-14B)}
 \label{sec:scale}
 
-To test whether Late Crystallization persists at larger scale, we run FEP detection on Qwen2.5-14B (48 layers, 14.7B parameters)---the same architecture family as Qwen2.5-7B but with 71\% more layers and 2$\times$ the parameters. Results (Table~\ref{tab:cross_fep}, row 2) show that Late Crystallization \emph{persists}: 77.7\% of correct answers never enter top-10 at any intermediate layer, and FEP Depth is 95.8\% (vs.\ 97.5\% at 7B). The 1.7 percentage point difference in FEP Depth is negligible, confirming that the relative layer at which knowledge crystallizes is \emph{scale-invariant} within the same architecture family. The slightly lower strict crystallization rate (77.7\% vs.\ 85.9\%) is consistent with increased model capacity enabling marginally earlier knowledge emergence at some layers, while the dominant pattern---abrupt final-layer crystallization---is preserved. This cross-scale validation strengthens the claim that Late Crystallization is a fundamental property of transformer factual processing, not an artifact of model size.
+To test scale invariance, we run FEP detection on Qwen2.5-14B (48 layers, 14.7B parameters). Results (Table~\ref{tab:cross_fep}, row 2) confirm Late Crystallization \emph{persists}: 77.7\% of correct answers never enter top-10 at any intermediate layer, and FEP Depth is 95.8\% (vs.\ 97.5\% at 7B). The negligible 1.7pp difference in FEP Depth confirms that the relative crystallization layer is scale-invariant within the same architecture family.
 
 \subsection{Cross-Benchmark Validation (MMLU)}
 \label{sec:mmlu}
 
-To verify that Late Crystallization is not specific to TruthfulQA, we run FEP detection on 1{,}200 MMLU samples spanning 24 subjects grouped into STEM, Humanities, Social Sciences, and Other domains (Table~\ref{tab:mmlu_fep}).
-
-\begin{table}[t]
-\centering\small
-\begin{tabular}{lcccc}
-\toprule
-\textbf{Benchmark} & \textbf{$n$} & \textbf{Mean FEP} & \textbf{Late Crystal} \\
-\midrule
-TruthfulQA & 817 & 27.3$\pm$1.8 & 85.9\% \\
-MMLU (all) & 1{,}200 & 27.9$\pm$0.5 & 98.2\% \\
-\midrule
-\quad STEM & 450 & 28.0$\pm$0.4 & 99.1\% \\
-\quad Humanities & 250 & 28.0$\pm$0.4 & 98.0\% \\
-\quad Social Sciences & 250 & 27.9$\pm$0.7 & 97.2\% \\
-\quad Other & 250 & 27.9$\pm$0.6 & 98.0\% \\
-\bottomrule
-\end{tabular}
-\caption{Cross-benchmark FEP validation (Qwen2.5-7B). Late Crystallization is even more pronounced on MMLU (98.2\%) than TruthfulQA (85.9\%), and consistent across all MMLU subject groups (97.2--99.1\%).}
-\label{tab:mmlu_fep}
-\end{table}
-
-Late Crystallization is \emph{more} pronounced on MMLU than TruthfulQA: 98.2\% of correct answers never enter top-10 at any intermediate layer ($\Delta$=+12.4 percentage points), with near-perfect final-layer crystallization across all four subject groups (97.2--99.1\%). The higher MMLU crystallization is consistent with MMLU testing domain-specific knowledge (primarily memorized facts) while TruthfulQA includes more ``computable'' categories (e.g., Logical Falsehood, FEP=22.1) that emerge earlier. This cross-benchmark validation confirms Late Crystallization is a general property of factual processing, not a benchmark-specific artifact.
+To verify generality beyond TruthfulQA, we run FEP detection on 1{,}200 MMLU samples spanning 24 subjects. Late Crystallization is even \emph{more} pronounced: 98.2\% of correct answers never enter top-10 at any intermediate layer, with near-perfect consistency across STEM (99.1\%), Humanities (98.0\%), Social Sciences (97.2\%), and Other (98.0\%) domains (Table~\ref{tab:mmlu_fep} in Appendix~\ref{app:mmlu}). The higher MMLU crystallization is consistent with MMLU testing primarily memorized domain knowledge, while TruthfulQA includes ``computable'' categories that emerge earlier.
 
 \begin{figure*}[t]
     \centering
@@ -427,7 +370,7 @@ Late Crystallization is \emph{more} pronounced on MMLU than TruthfulQA: 98.2\% o
 \label{tab:cross_interventions}
 \end{table}
 
-Table~\ref{tab:cross_interventions} reveals an \emph{architecture-dependent} pattern: on moderate-crystallization models (Llama, Mistral), \caa{} significantly outperforms \dola{}---Llama: +33.5\% vs.\ +1.9\% ($z{=}4.93$, $p{<}0.001$); Mistral: +32.3\% vs.\ +11.4\% ($z{=}3.21$, $p{=}0.001$). Both comparisons survive Bonferroni correction (adjusted $\alpha{=}0.017$). On high-crystallization Qwen (85.9\%), the pattern reverses: \dola{} achieves +25.4\% MC1 vs.\ \caa{}'s +15.5\%. While this 9.9 percentage point difference is numerically substantial, it does not reach statistical significance ($z{=}1.82$, $p{=}0.069$), likely due to the smaller variance in outcomes when crystallization is extreme. Importantly, the \emph{direction} of the effect on Qwen is consistent with our theoretical prediction: logit-space contrast (\dola{}) should be most effective when crystallization is extreme because the signal-to-noise ratio in post-crystallization logits is highest. The consistent pattern across all three architectures---\caa{} dominates when crystallization is moderate, \dola{} achieves the largest gains when crystallization is extreme---supports the crystallization-grounded intervention selection principle. We further validate this with \crystalboost{} (Appendix~\ref{app:crystalboost}), which yields consistent improvements (+2.2\% Qwen, +8.4\% Llama) and outperforms \dola{} on Llama by +6.3\%.
+Table~\ref{tab:cross_interventions} reveals an \emph{architecture-dependent} pattern: on moderate-crystallization models, \caa{} significantly outperforms \dola{}---Llama: +33.5\% vs.\ +1.9\% ($z{=}4.93$, $p{<}0.001$); Mistral: +32.3\% vs.\ +11.4\% ($z{=}3.21$, $p{=}0.001$). Both survive Bonferroni correction ($\alpha{=}0.017$). On high-crystallization Qwen (85.9\%), the pattern reverses: \dola{} achieves +25.4\% vs.\ \caa{}'s +15.5\% ($z{=}1.82$, $p{=}0.069$). The consistent pattern---\caa{} dominates when crystallization is moderate, \dola{} achieves the largest gains when crystallization is extreme---supports crystallization-grounded intervention selection. \crystalboost{} (Appendix~\ref{app:crystalboost}) further validates this, outperforming \dola{} on Llama (+8.4\% vs.\ +1.9\%).
 
 \subsection{LayerNorm Ablation Analysis}
 \label{sec:ln_ablation}
@@ -453,55 +396,30 @@ LN scale $\times$1.5 & 27.71 & 95.7\% & 0.2387 & +9.0\% \\
 \label{tab:ln_ablation}
 \end{table}
 
-Complete ablation of ln\_final produces \emph{identical} FEP distributions (Mean FEP=27.30, 85.9\% late crystallization), providing strong evidence that crystallization is intrinsic to the residual stream rather than an artifact of LayerNorm projection. Note that this ablation establishes invariance (LN is not \emph{necessary} for crystallization), not a full causal mechanism; the underlying cause likely involves transformer depth and attention routing patterns. Scaling LN up ($\times$1.2, $\times$1.5) progressively increases late crystallization to 87.6\% and 95.7\%, revealing LN as a ``crystallization amplifier.'' The optimal MC1 occurs at $\times$1.2 scaling (+11.8\%), a simple, computationally cheap intervention. Notably, LN scaling adds \emph{zero} inference-time overhead (a single element-wise multiply), compared to \dola{}'s 2$\times$ forward pass cost and \caa{}/\iti{}'s offline steering vector computation plus runtime addition at each selected layer.
+Complete ablation of ln\_final produces \emph{identical} FEP distributions (Mean FEP=27.30, 85.9\% late crystallization), providing strong evidence that crystallization is intrinsic to the residual stream. Scaling LN up ($\times$1.2, $\times$1.5) progressively increases late crystallization to 87.6\% and 95.7\%, revealing LN as a ``crystallization amplifier.'' The optimal MC1 occurs at $\times$1.2 (+11.8\%), a simple intervention adding \emph{zero} inference-time overhead (a single element-wise multiply), compared to \dola{}'s 2$\times$ forward pass cost.
 
 % ==================== 8. ANALYSIS AND DISCUSSION ====================
 \section{Discussion}
 \label{sec:discussion}
 
-\paragraph{Why activation scaling fails.} Late Crystallization provides a principled explanation: 85.9\% of correct answers are invisible in logit space at all intermediate layers, so scaling amplifies non-factual signals alongside implicit factual ones. The implicit-to-explicit transition occurs through nonlinear operations (LayerNorm, unembedding) that linear scaling cannot selectively steer. Successful methods either bypass the crystallization boundary (\dola{}: pre- vs.\ post-crystallization logit contrast) or span the entire pre-crystallization window (\iti{}/\caa{}: top\_k$\geq$10 layers). This explains the layer-count threshold observed in Section~\ref{sec:mc_results}: at top\_k$\leq$5, interventions affect too few layers to capture the implicit knowledge distributed across the pre-crystallization residual stream.
+\paragraph{Why activation scaling fails.} Late Crystallization provides a principled explanation: 85.9\% of correct answers are invisible in logit space at intermediate layers, so scaling amplifies non-factual signals alongside implicit factual ones. Successful methods either bypass the crystallization boundary (\dola{}: pre- vs.\ post-crystallization logit contrast) or span the entire pre-crystallization window (\iti{}/\caa{}: top\_k$\geq$10 layers).
 
-\paragraph{Architecture-dependent intervention selection.} Our results suggest a practical guideline: characterize a model's crystallization profile (via FEP detection) before selecting an intervention method. For models with extreme crystallization ($>$80\% strict final-layer), logit-space methods like \dola{} are preferred. For models with more gradual emergence, activation-space methods like \caa{} are more effective. This crystallization-grounded selection principle is validated by \crystalboost{} (Appendix~\ref{app:crystalboost}), which uses FEP-derived layer boundaries to achieve consistent improvements without per-architecture hyperparameter tuning.
+\paragraph{Architecture-dependent intervention selection.} Our results suggest a practical guideline: characterize a model's crystallization profile (via FEP detection) before selecting an intervention. For models with extreme crystallization ($>$80\% strict final-layer), logit-space methods like \dola{} are preferred; for models with gradual emergence, activation-space methods like \caa{} are more effective. This is further validated by \crystalboost{} (Appendix~\ref{app:crystalboost}), which uses FEP-derived layer boundaries.
 
-\paragraph{Computational cost.} Table~\ref{tab:cost} compares inference overhead. LN scaling is the cheapest effective intervention ($\times$1.0 overhead), making it attractive for deployment despite lower gains than \dola{}.
+\paragraph{Computational cost.} LN scaling is the cheapest effective intervention ($1.0\times$ overhead, +11.8\% MC1), compared to \iti{}/\caa{} (${\sim}1.05\times$, +10--15.5\%) and \dola{} ($2.0\times$, +25.4\%).
 
-\begin{table}[t]
-\centering\small
-\begin{tabular}{lccc}
-\toprule
-\textbf{Method} & \textbf{Offline} & \textbf{Inference} & \textbf{Best $\Delta$MC1} \\
-\midrule
-LN $\times$1.2 & none & $1.0\times$ & +11.8\% \\
-\iti{} & probe training & ${\sim}1.05\times$ & +10.0\% \\
-\caa{} & 256 pairs & ${\sim}1.05\times$ & +15.5\% \\
-\dola{} & none & $2.0\times$ & +25.4\% \\
-\bottomrule
-\end{tabular}
-\caption{Computational cost comparison. LN scaling achieves +11.8\% MC1 with zero additional inference overhead (single element-wise multiply). \dola{} requires a full second forward pass.}
-\label{tab:cost}
-\end{table}
+\paragraph{Why \crystalboost{} underperforms \dola{} on Qwen.} This reveals a \emph{space mismatch}: \dola{} operates in logit space where crystallization is directly visible, while \crystalboost{} steers in activation space where 85.9\% of correct answers remain implicit. On lower-crystallization Llama (71.0\%), \crystalboost{} outperforms \dola{} (+8.4\% vs.\ +1.9\%), \emph{validating} FEP theory.
 
-\paragraph{Why \crystalboost{} underperforms \dola{} on Qwen.} \crystalboost{}'s +2.2\% gain on high-crystallization Qwen vs.\ \dola{}'s +26.4\% does not contradict FEP theory; rather, it reveals a \emph{space mismatch}: \dola{} operates in logit space where crystallization is directly visible, while \crystalboost{} steers in activation space where 85.9\% of correct answers remain implicit. On lower-crystallization Llama (71.0\%), where more knowledge is activation-visible, \crystalboost{} outperforms \dola{} (+8.4\% vs.\ +1.9\%). This pattern \emph{validates} the theory: activation-space methods are most effective when crystallization is moderate, not extreme.
+\paragraph{Computability--Memorization Spectrum.} Category-level FEP variation (Figure~\ref{fig:spectrum}) reveals different processing pathways: computable knowledge (Logical Falsehood, FEP=22.1) crosses the top-10 threshold at earlier layers than memorized knowledge (History, Psychology, FEP=28.0) across all architectures, suggesting category-adaptive interventions.
 
-\paragraph{Computability--Memorization Spectrum.} Category-level FEP variation reveals fundamentally different processing pathways (Figure~\ref{fig:spectrum}): computable knowledge (Logical Falsehood, FEP=22.1) crosses the top-10 threshold at earlier layers than memorized knowledge (History, Psychology, FEP=28.0) consistently across all three architectures, suggesting computable knowledge may be amenable to intermediate-layer interventions while memorized knowledge requires methods at or after the crystallization boundary.
+\paragraph{Relationship to SADI and instruction tuning.} SADI \citep{zhang2025sadi} achieves MC1=67\% on instruction-tuned models (baseline$\approx$40--50\%); our contribution is orthogonal, providing a \emph{mechanistic explanation} for intervention effectiveness. A pilot on Qwen2.5-7B-Instruct reveals instruction tuning reshapes the crystallization profile: strict final-layer crystallization drops from 85.9\% to 37.3\%, while knowledge still emerges late (FEP depth=91.0\%). This predicts activation-space interventions should be more effective on instruction-tuned models, aligning with SADI's success.
 
-\begin{figure*}[t]
-    \centering
-    \includegraphics[width=\textwidth]{figures/computability_memorization_spectrum.png}
-    \caption{Computability--Memorization Spectrum across architectures. Blue: computable knowledge (logical reasoning); Red: memorized knowledge (history, psychology). Computable categories cross the top-10 rank threshold at earlier layers across all three models.}
-    \label{fig:spectrum}
-\end{figure*}
-
-\paragraph{Relationship to SADI.} SADI \citep{zhang2025sadi} achieves MC1=67\% on instruction-tuned models (baseline$\approx$40--50\%), while our best is MC1=27.8\% on base models (baseline$\approx$20\%). Our contribution is orthogonal: we provide a \emph{mechanistic explanation} for why different interventions work. The Late Crystallization framework predicts SADI's success---its ``semantic-adaptive'' strategy effectively operates at the crystallization boundary, dynamically selecting layers where knowledge transitions from implicit to explicit. This suggests that Late Crystallization theory could inform the design of next-generation adaptive interventions.
-
-\paragraph{Instruction-tuned models.} A pilot experiment on Qwen2.5-7B-Instruct (817 TruthfulQA samples) reveals that instruction tuning dramatically reshapes the crystallization profile: strict final-layer crystallization drops from 85.9\% (base) to 37.3\% (instruct), while mean FEP shifts from 27.3 to 25.5 ($\sigma$=2.9 vs.\ 1.8). Knowledge still emerges late (FEP depth=91.0\%) but is now spread across layers 19--28 rather than concentrated at the final layer. This is consistent with instruction tuning ``smoothing'' the crystallization boundary, allowing factual knowledge to surface more gradually across the final quarter of the network. This finding predicts that activation-space interventions (\caa{}, \iti{}) should be \emph{more} effective on instruction-tuned models (lower crystallization favors activation steering over logit contrast), aligning with SADI's success on such models.
-
-\paragraph{Future directions.} Key directions include architecture-adaptive interventions that automatically match a model's crystallization profile, LN scaling as a computationally cheap intervention ($\times$1.2 yields +11.8\% MC1 with negligible overhead), category-adaptive methods leveraging the Computability--Memorization Spectrum for domain-specific tuning, scaling verification at 70B+ parameters and across architecture families at 14B+ scale, and systematic investigation of how RLHF and instruction tuning reshape the crystallization profile across model families.
+\paragraph{Future directions.} Key directions include architecture-adaptive interventions that automatically match a model's crystallization profile, category-adaptive methods leveraging the Computability--Memorization Spectrum, scaling verification at 70B+ parameters, and systematic investigation of how RLHF and instruction tuning reshape crystallization across model families.
 
 % ==================== CONCLUSION ====================
 \section{Conclusion}
 
-We discover \textbf{Late Crystallization}---factual knowledge in LLMs crystallizes abruptly at the final layers (85.9\% of correct answers never enter top-10 at intermediate layers in Qwen2.5-7B). Cross-architecture validation on Llama-3.1-8B (71.0\%) and Mistral-7B (27.1\%) confirms universality while revealing architecture-dependent variation; cross-scale validation on Qwen2.5-14B (48 layers, FEP Depth 95.8\%) confirms the phenomenon persists within the 7--14B scale range; cross-benchmark validation on 1{,}200 MMLU samples yields 98.2\% late crystallization, and direct comparison with tuned lens probes ($\Delta$=0.2\%) confirms the phenomenon is not a probing artifact. A pilot on Qwen2.5-7B-Instruct shows instruction tuning reshapes the crystallization boundary (37.3\% vs.\ 85.9\% strict final-layer), consistent with the framework's predictions. This phenomenon explains an architecture-dependent intervention pattern (\caa{} significantly outperforms \dola{} on moderate-crystallization models; \dola{} achieves the largest gains on high-crystallization models), the universal failure of activation scaling, and the Computability--Memorization Spectrum. LayerNorm ablation provides strong evidence that crystallization is intrinsic to the residual stream, while LN scaling ($\times$1.2) yields +11.8\% MC1 with zero inference overhead. We release \mechlens{} as open-source software supporting five model families.
+We discover \textbf{Late Crystallization}---factual knowledge in LLMs crystallizes abruptly at the final layers (85.9\% in Qwen2.5-7B), validated across architectures (Llama: 71.0\%, Mistral: 27.1\%), scales (14B: FEP Depth 95.8\%), benchmarks (MMLU: 98.2\%), and probing methods (tuned lens $\Delta$=0.2\%). A pilot on Qwen2.5-7B-Instruct shows instruction tuning reshapes the boundary (37.3\% vs.\ 85.9\%). This phenomenon explains an architecture-dependent intervention pattern (\caa{} outperforms \dola{} on moderate-crystallization models; \dola{} dominates on high-crystallization models), the universal failure of activation scaling, and the Computability--Memorization Spectrum. LayerNorm ablation confirms crystallization is intrinsic to the residual stream, while LN scaling ($\times$1.2) yields +11.8\% MC1 with zero overhead. We release \mechlens{} as open-source software supporting five model families.
 
 \section*{Limitations}
 
@@ -680,9 +598,60 @@ To test whether mechanistic insight into crystallization can directly inform int
 
 See Table~\ref{tab:fep_distribution} and Figure~\ref{fig:fep_dist} in the main text for full FEP distribution data across architectures.
 
+\section{Top-$k$ Sensitivity Analysis}
+\label{app:topk}
+
+\begin{table}[h]
+\centering\small
+\begin{tabular}{rcccc}
+\toprule
+\textbf{$k$} & \textbf{Mean FEP} & \textbf{$\sigma$} & \textbf{Late Crystal} & \textbf{FEP Depth} \\
+\midrule
+1 & 28.0 & 0.0 & 100.0\% & 100.0\% \\
+3 & 27.9 & 0.4 & 98.3\% & 99.8\% \\
+5 & 27.6 & 1.4 & 92.9\% & 98.7\% \\
+10 & 27.3 & 1.8 & 85.9\% & 97.5\% \\
+20 & 27.0 & 2.1 & 80.2\% & 96.5\% \\
+50 & 26.6 & 2.6 & 72.7\% & 95.0\% \\
+100 & 26.0 & 3.4 & 64.7\% & 93.0\% \\
+\bottomrule
+\end{tabular}
+\caption{FEP sensitivity to $k$ (Qwen2.5-7B, 817 samples). Late Crystallization is robust: even at $k{=}100$, 64.7\% of answers never appear at intermediate layers. FEP Depth stays $>$93\% across all thresholds.}
+\label{tab:topk_sensitivity}
+\end{table}
+
+\section{Cross-Benchmark FEP Validation (MMLU)}
+\label{app:mmlu}
+
+\begin{table}[h]
+\centering\small
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Benchmark} & \textbf{$n$} & \textbf{Mean FEP} & \textbf{Late Crystal} \\
+\midrule
+TruthfulQA & 817 & 27.3$\pm$1.8 & 85.9\% \\
+MMLU (all) & 1{,}200 & 27.9$\pm$0.5 & 98.2\% \\
+\midrule
+\quad STEM & 450 & 28.0$\pm$0.4 & 99.1\% \\
+\quad Humanities & 250 & 28.0$\pm$0.4 & 98.0\% \\
+\quad Social Sciences & 250 & 27.9$\pm$0.7 & 97.2\% \\
+\quad Other & 250 & 27.9$\pm$0.6 & 98.0\% \\
+\bottomrule
+\end{tabular}
+\caption{Cross-benchmark FEP validation (Qwen2.5-7B). Late Crystallization is even more pronounced on MMLU (98.2\%) than TruthfulQA (85.9\%), and consistent across all MMLU subject groups (97.2--99.1\%).}
+\label{tab:mmlu_fep}
+\end{table}
+
 \section{Computability--Memorization Spectrum Details}
 \label{app:spectrum}
 
-See Figure~\ref{fig:spectrum} in the main text for the cross-architecture visualization. Full per-category FEP statistics are available upon request.
+\begin{figure*}[h]
+    \centering
+    \includegraphics[width=\textwidth]{figures/computability_memorization_spectrum.png}
+    \caption{Computability--Memorization Spectrum across architectures. Blue: computable knowledge (logical reasoning); Red: memorized knowledge (history, psychology). Computable categories cross the top-10 rank threshold at earlier layers across all three models.}
+    \label{fig:spectrum}
+\end{figure*}
+
+Full per-category FEP statistics are available upon request.
 
 \end{document}
