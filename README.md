@@ -1,106 +1,169 @@
-# MechLens
+# MechLens: Late Crystallization of Factual Knowledge in Language Models
 
-A mechanistic interpretability framework for large language models (LLMs).
+A mechanistic interpretability framework for analyzing factual knowledge emergence in large language models.
 
 ## Overview
 
-MechLens provides tools for analyzing and understanding the internal mechanisms of transformer-based language models. It offers:
+MechLens discovers **Late Crystallization**: factual knowledge in LLMs does not gradually emerge across layers but "crystallizes" abruptly at the final layers. In Qwen2.5-7B, 85.9% of correct answers *never* enter top-10 predictions at any intermediate layer.
 
-- **Analysis Tools**: Logit lens, causal tracing, activation analysis, attention pattern analysis
-- **Intervention Strategies**: DoLa, CAA, ITI, activation scaling, ablation, injection
-- **Visualization**: Interactive visualizations for activations, attention, circuits, and interventions
-- **Benchmarks**: TruthfulQA and Chinese Hallucination Benchmark support
+Key findings:
+- **Factual Emergence Point (FEP)**: A formal metric identifying the critical layer where correct answers first appear in logit predictions
+- **Architecture-dependent intervention patterns**: CAA outperforms DoLa on moderate-crystallization models; DoLa dominates on high-crystallization models
+- **Computability-Memorization Spectrum**: Computable knowledge crystallizes earlier than memorized facts
+- **LayerNorm as crystallization amplifier**: LN scaling (x1.2) yields +11.8% MC1 with zero inference overhead
+
+## Supported Models
+
+| Model | Layers | Heads | d_model | Architecture |
+|-------|--------|-------|---------|-------------|
+| Qwen2.5-0.5B | 24 | 14 | 896 | GQA + SwiGLU |
+| Qwen2.5-7B | 28 | 28 | 3584 | GQA + SwiGLU |
+| Qwen2.5-14B | 48 | 40 | 5120 | GQA + SwiGLU |
+| Llama-3.1-8B | 32 | 32 | 4096 | GQA + SwiGLU |
+| Llama-2-7B | 32 | 32 | 4096 | Standard + SwiGLU |
+| Mistral-7B | 32 | 32 | 4096 | Sliding Window + SwiGLU |
+| Pythia-1.4B | 24 | 16 | 2048 | Standard MLP |
 
 ## Installation
 
 ```bash
 # Clone the repository
-git clone https://github.com/hellogxp/MechLens-Framework.git
+git clone https://github.com/anonymous/MechLens-Framework.git
 cd MechLens-Framework
 
 # Install in development mode
-pip install -e .
+pip install -e ".[dev]"
 
-# Or install with all dependencies
+# Or install with all optional dependencies
 pip install -e ".[all]"
 ```
 
-## Requirements
+### Requirements
 
 - Python >= 3.10
 - PyTorch >= 2.0
-- transformers >= 4.37
-- transformer-lens >= 2.0
+- CUDA 12.1+ (recommended for GPU acceleration)
+- NVIDIA A100-40GB or equivalent (for 7B+ models)
 
 ## Quick Start
 
-```python
-from mechlens.models import ModelLoader
-from mechlens.analysis import LogitLensAnalyzer
+### Interactive Gradio UI
 
-# Load a model
-loader = ModelLoader()
-model = loader.load("pythia-70m")
-
-# Run logit lens analysis
-analyzer = LogitLensAnalyzer(model)
-results = analyzer.analyze("The capital of France is")
-
-# Visualize results
-from mechlens.visualization import plot_logit_lens
-plot_logit_lens(results)
+```bash
+mechlens
+# or
+python -m mechlens.app
 ```
 
-## Features
+This launches an interactive web interface at `http://localhost:7860` for:
+- FEP detection and visualization
+- Activation analysis (logit lens / tuned lens)
+- Causal tracing
+- Intervention experiments (CAA, DoLa, ITI, ablation, scaling)
+- Circuit analysis
 
-### Analysis Methods
+### Programmatic Usage
 
-- **Logit Lens**: Project intermediate activations to vocabulary space
-- **Causal Tracing**: Identify important components through activation patching
-- **Contrastive Analysis**: Compare activations between correct and incorrect predictions
-- **Circuit Analysis**: Discover and analyze computational circuits
+```python
+from mechlens.models.model_loader import load_model
+from mechlens.analysis.activation import compute_fep
 
-### Intervention Strategies
+# Load model
+model = load_model("Qwen/Qwen2.5-7B")
 
-- **DoLa (Decoding by Contrasting Layers)**: Contrast early and late layer predictions
-- **CAA (Contrastive Activation Addition)**: Add steering vectors to modify behavior
-- **ITI (Inference-Time Intervention)**: Apply learned intervention directions
-- **Activation Scaling/Ablation**: Modify specific component activations
+# Detect Factual Emergence Point
+fep_result = compute_fep(model, "The capital of France is", answer="Paris", k=10)
+print(f"FEP Layer: {fep_result.fep_layer}, Depth: {fep_result.fep_depth:.1%}")
+```
 
-### Supported Models
+## Reproducing Paper Results
 
-MechLens supports models compatible with TransformerLens:
-- Pythia family (70M to 12B)
-- GPT-2 family
-- Llama family
-- Qwen family
-- And more...
+All experiment scripts are in the `experiments/` directory:
+
+```bash
+# FEP detection across models
+python experiments/run_fep_detection.py
+
+# Cross-architecture intervention comparison
+python experiments/run_cross_architecture_interventions.py
+
+# CrystalBoost validation
+python experiments/run_crystalboost.py
+
+# 14B scale validation
+python experiments/run_14b_scale_validation.py
+
+# MMLU cross-benchmark validation
+python experiments/run_mmlu_fep_validation.py
+
+# Tuned lens comparison
+python experiments/run_tuned_lens_comparison.py
+
+# Full Round 2 experiments
+bash experiments/run_round2_all.sh
+```
+
+Pre-computed results are available in the `results/` directory.
 
 ## Project Structure
 
 ```
-src/mechlens/
-├── analysis/          # Analysis methods
-├── intervention/      # Intervention strategies
-├── visualization/     # Visualization tools
-├── models/           # Model loading and hooks
-├── benchmark/        # Benchmark implementations
-└── experiments/      # Experiment utilities
+MechLens-Framework/
+├── src/mechlens/
+│   ├── analysis/          # FEP detection, activation analysis, causal tracing, circuit analysis
+│   ├── intervention/      # CAA, DoLa, ITI, ablation, scaling, CrystalBoost
+│   ├── models/            # Model loading, hook management
+│   ├── benchmark/         # TruthfulQA, Chinese hallucination bench
+│   ├── editing/           # ROME, MEMIT knowledge editing
+│   ├── experiments/       # Cross-model experiment orchestration
+│   ├── visualization/     # Plotly-based interactive visualizations
+│   ├── app.py             # Gradio web interface
+│   ├── config.py          # Model registry and configuration
+│   └── types.py           # Type definitions
+├── experiments/           # Experiment scripts for paper reproduction
+├── results/               # Pre-computed experiment results
+├── data/                  # Evaluation datasets
+├── tests/                 # Unit and integration tests
+├── paper/                 # LaTeX source and figures
+└── pyproject.toml         # Project configuration
 ```
+
+## Testing
+
+```bash
+# Run all unit tests
+pytest tests/unit/ -v
+
+# Run with coverage
+pytest tests/ --cov=src/mechlens --cov-report=term-missing
+
+# Run specific test
+pytest tests/unit/test_intervention.py -v
+```
+
+## Hardware Requirements
+
+| Model | FP16 VRAM | INT8 VRAM |
+|-------|-----------|-----------|
+| Pythia-1.4B | ~4 GB | ~2 GB |
+| Qwen2.5-0.5B | ~2 GB | ~1 GB |
+| Qwen2.5-7B | ~16 GB | ~8 GB |
+| Qwen2.5-14B | ~30 GB | ~16 GB |
+| Llama-3.1-8B | ~18 GB | ~10 GB |
 
 ## Citation
 
-If you use MechLens in your research, please cite:
-
 ```bibtex
-@inproceedings{mechlens2026,
-  title={MechLens: A Mechanistic Interpretability Framework for LLMs},
+@inproceedings{
+  anonymous2026mechlens,
+  title={MechLens: Late Crystallization of Factual Knowledge Explains Intervention Effectiveness in Language Models},
   author={Anonymous},
   booktitle={Conference on Language Modeling (COLM)},
-  year={2026}
+  year={2026},
+  url={https://anonymous.4open.science/r/MechLens-COLM2026}
 }
 ```
 
 ## License
 
-MIT License - see [LICENSE](LICENSE) for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
