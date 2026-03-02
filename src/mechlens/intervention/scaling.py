@@ -161,15 +161,22 @@ def _compute_activation_diff(
         hook_points.extend([
             f"blocks.{layer}.hook_resid_post",
             f"blocks.{layer}.hook_mlp_out",
-            f"blocks.{layer}.attn.hook_result",
+            f"blocks.{layer}.hook_attn_out",
         ])
 
+    # Apply intervention hooks and run with cache
     with torch.no_grad():
-        _, cache = model.run_with_cache(
-            tokens,
-            names_filter=hook_points,
-            fwd_hooks=hooks,
-        )
+        # Add intervention hooks temporarily
+        for hook_name, hook_fn in hooks:
+            model.add_hook(hook_name, hook_fn)
+        try:
+            _, cache = model.run_with_cache(
+                tokens,
+                names_filter=hook_points,
+            )
+        finally:
+            # Remove intervention hooks
+            model.reset_hooks()
 
     residual_list = []
     mlp_list = []
@@ -178,7 +185,7 @@ def _compute_activation_diff(
     for layer in range(n_layers):
         residual_list.append(cache[f"blocks.{layer}.hook_resid_post"][0])
         mlp_list.append(cache[f"blocks.{layer}.hook_mlp_out"][0])
-        attn_list.append(cache[f"blocks.{layer}.attn.hook_result"][0])
+        attn_list.append(cache[f"blocks.{layer}.hook_attn_out"][0])
 
     intervened = ActivationData(
         residual_stream=torch.stack(residual_list, dim=0),
