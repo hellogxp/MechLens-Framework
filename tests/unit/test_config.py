@@ -133,7 +133,7 @@ class TestListSupportedModels:
     def test_returns_list(self):
         models = list_supported_models()
         assert isinstance(models, list)
-        assert len(models) == 4
+        assert len(models) == 7
 
     def test_model_info_keys(self):
         models = list_supported_models()
