@@ -111,7 +111,7 @@ def _activation_patching(
     # Test each attention head
     for layer in range(n_layers):
         for head in range(n_heads):
-            hook_name = f"blocks.{layer}.hook_attn_out"
+            hook_name = f"blocks.{layer}.attn.hook_result"
 
             def ablate_head(activation, hook, h=head):
                 modified = activation.clone()
@@ -225,7 +225,7 @@ def _get_corrupted_baseline(
         return torch.zeros_like(activation)
 
     hooks = [
-        (f"blocks.{layer}.hook_attn_out", ablate_all)
+        (f"blocks.{layer}.attn.hook_result", ablate_all)
         for layer in range(model.cfg.n_layers)
     ]
 
@@ -271,7 +271,7 @@ def _compute_metrics(
         return modified
 
     hooks = [
-        (f"blocks.{layer}.hook_attn_out", ablate_non_circuit)
+        (f"blocks.{layer}.attn.hook_result", ablate_non_circuit)
         for layer in range(model.cfg.n_layers)
     ]
 
