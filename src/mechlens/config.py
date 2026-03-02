@@ -1,6 +1,6 @@
 """MechLens configuration module.
 
-SUPPORTED_MODELS registry and default settings for all 4 model families.
+SUPPORTED_MODELS registry and default settings for all 7 models across 4 families.
 Per plan.md and R9 model coverage matrix.
 """
 
@@ -101,6 +101,21 @@ SUPPORTED_MODELS: dict[str, ModelMetadata] = {
         vram_fp16_gb=18.0,
         vram_int8_gb=11.0,
     ),
+    # Qwen2.5-14B for large-scale Late Crystallization validation
+    "Qwen/Qwen2.5-14B": ModelMetadata(
+        hf_name="Qwen/Qwen2.5-14B",
+        display_name="Qwen2.5-14B",
+        n_layers=48,
+        n_heads=40,
+        n_kv_heads=8,  # GQA
+        d_model=5120,
+        mlp_type=MLPType.SWIGLU,
+        supports_rome_memit=False,
+        supports_chinese_bench=True,
+        supports_icl_study=False,
+        vram_fp16_gb=38.0,
+        vram_int8_gb=20.0,
+    ),
     "EleutherAI/pythia-1.4b": ModelMetadata(
         hf_name="EleutherAI/pythia-1.4b",
         display_name="Pythia-1.4B",
@@ -120,6 +135,7 @@ SUPPORTED_MODELS: dict[str, ModelMetadata] = {
 MODEL_ALIASES: dict[str, str] = {
     "qwen-0.5b": "Qwen/Qwen2.5-0.5B",
     "qwen-7b": "Qwen/Qwen2.5-7B",
+    "qwen-14b": "Qwen/Qwen2.5-14B",
     "llama-8b": "meta-llama/Llama-3.1-8B",
     "llama-2-7b": "meta-llama/Llama-2-7b-hf",
     "llama2-7b": "meta-llama/Llama-2-7b-hf",
