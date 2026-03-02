@@ -43,7 +43,7 @@ class TestHookPoints:
     def test_specific_hook_names(self):
         assert HOOK_POINTS["resid_post"].format(layer=0) == "blocks.0.hook_resid_post"
         assert HOOK_POINTS["mlp_out"].format(layer=3) == "blocks.3.hook_mlp_out"
-        assert HOOK_POINTS["attn_out"].format(layer=7) == "blocks.7.attn.hook_result"
+        assert HOOK_POINTS["attn_out"].format(layer=7) == "blocks.7.hook_attn_out"
         assert HOOK_POINTS["attn_z"].format(layer=12) == "blocks.12.attn.hook_z"
 
 
@@ -52,7 +52,7 @@ class TestGetComponentHookPoint:
 
     def test_attn_head(self):
         hp = get_component_hook_point(5, ComponentType.ATTN_HEAD)
-        assert hp == "blocks.5.attn.hook_result"
+        assert hp == "blocks.5.hook_attn_out"
 
     def test_mlp_neuron(self):
         hp = get_component_hook_point(10, ComponentType.MLP_NEURON)
@@ -129,7 +129,7 @@ class TestValidateHookPoints:
         model.hook_dict = {
             "blocks.0.hook_resid_post": MagicMock(),
             "blocks.0.hook_mlp_out": MagicMock(),
-            "blocks.0.attn.hook_result": MagicMock(),
+            "blocks.0.hook_attn_out": MagicMock(),
         }
         valid, missing = validate_hook_points(
             model,
@@ -172,7 +172,7 @@ class TestHookManager:
     def test_get_hook_point(self):
         mgr = self._make_manager()
         assert mgr.get_hook_point(0, "mlp_out") == "blocks.0.hook_mlp_out"
-        assert mgr.get_hook_point(5, "attn_out") == "blocks.5.attn.hook_result"
+        assert mgr.get_hook_point(5, "attn_out") == "blocks.5.hook_attn_out"
 
     def test_get_hook_point_invalid(self):
         mgr = self._make_manager()
