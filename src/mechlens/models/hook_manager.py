@@ -26,7 +26,7 @@ HOOK_POINTS = {
     "resid_pre": "blocks.{layer}.hook_resid_pre",
     "resid_post": "blocks.{layer}.hook_resid_post",
     "resid_mid": "blocks.{layer}.hook_resid_mid",
-    "attn_out": "blocks.{layer}.attn.hook_result",
+    "attn_out": "blocks.{layer}.hook_attn_out",
     "attn_pattern": "blocks.{layer}.attn.hook_pattern",
     "attn_scores": "blocks.{layer}.attn.hook_attn_scores",
     "attn_z": "blocks.{layer}.attn.hook_z",
