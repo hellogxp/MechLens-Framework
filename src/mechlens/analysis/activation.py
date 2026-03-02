@@ -38,7 +38,7 @@ def analyze(
         hook_points.extend([
             f"blocks.{layer}.hook_resid_post",
             f"blocks.{layer}.hook_mlp_out",
-            f"blocks.{layer}.attn.hook_result",
+            f"blocks.{layer}.hook_attn_out",
         ])
 
     # Run model with cache
@@ -59,7 +59,7 @@ def analyze(
         mlp_list.append(mlp_out[0])  # [seq, d_model]
 
         # Attention output
-        attn_out = cache[f"blocks.{layer}.attn.hook_result"]
+        attn_out = cache[f"blocks.{layer}.hook_attn_out"]
         attn_list.append(attn_out[0])  # [seq, d_model]
 
     residual_stream = torch.stack(residual_list, dim=0)  # [layers, seq, d_model]
@@ -257,7 +257,7 @@ def _get_hook_component(component_type: str) -> str:
     if component_type == "mlp":
         return "hook_mlp_out"
     elif component_type == "attn":
-        return "attn.hook_result"
+        return "hook_attn_out"
     elif component_type == "resid":
         return "hook_resid_post"
     else:
