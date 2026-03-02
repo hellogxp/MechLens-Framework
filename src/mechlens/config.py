@@ -57,21 +57,6 @@ SUPPORTED_MODELS: dict[str, ModelMetadata] = {
         vram_fp16_gb=20.0,
         vram_int8_gb=13.0,
     ),
-    # Qwen2.5-14B for cross-scale Late Crystallization validation (Section 4.3)
-    "Qwen/Qwen2.5-14B": ModelMetadata(
-        hf_name="Qwen/Qwen2.5-14B",
-        display_name="Qwen2.5-14B",
-        n_layers=48,
-        n_heads=40,
-        n_kv_heads=8,  # GQA with 8 KV heads per paper Table 1
-        d_model=5120,
-        mlp_type=MLPType.SWIGLU,
-        supports_rome_memit=True,
-        supports_chinese_bench=True,
-        supports_icl_study=False,  # Not used in ICL study per paper
-        vram_fp16_gb=35.0,
-        vram_int8_gb=20.0,
-    ),
     "meta-llama/Llama-3.1-8B": ModelMetadata(
         hf_name="meta-llama/Llama-3.1-8B",
         display_name="Llama 3.1-8B",
@@ -135,7 +120,6 @@ SUPPORTED_MODELS: dict[str, ModelMetadata] = {
 MODEL_ALIASES: dict[str, str] = {
     "qwen-0.5b": "Qwen/Qwen2.5-0.5B",
     "qwen-7b": "Qwen/Qwen2.5-7B",
-    "qwen-14b": "Qwen/Qwen2.5-14B",
     "llama-8b": "meta-llama/Llama-3.1-8B",
     "llama-2-7b": "meta-llama/Llama-2-7b-hf",
     "llama2-7b": "meta-llama/Llama-2-7b-hf",
