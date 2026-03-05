@@ -118,3 +118,4 @@ strategies/
 
 # Strategies (user-generated)
 strategies/*.json
+docs/
