@@ -1,0 +1,16 @@
+{
+  "sst2": {
+    "task": "sst2",
+    "model": "Qwen/Qwen2.5-7B",
+    "n_samples": 200,
+    "late_crystallization_pct": 0.5,
+    "mean_fep_depth": 84.1
+  },
+  "nli": {
+    "task": "nli",
+    "model": "Qwen/Qwen2.5-7B",
+    "n_samples": 10,
+    "late_crystallization_pct": 40.0,
+    "mean_fep_depth": 92.9
+  }
+}

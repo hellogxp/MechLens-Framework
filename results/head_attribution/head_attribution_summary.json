@@ -1,0 +1,159 @@
+{
+  "Qwen/Qwen2.5-7B": {
+    "n_layers": 28,
+    "n_heads": 28,
+    "n_valid_samples": 0,
+    "critical_heads": [
+      27,
+      26
+    ],
+    "top5_head_mean_rank_change": [
+      [
+        0,
+        0.0
+      ],
+      [
+        1,
+        0.0
+      ],
+      [
+        2,
+        0.0
+      ],
+      [
+        3,
+        0.0
+      ],
+      [
+        4,
+        0.0
+      ]
+    ]
+  },
+  "meta-llama/Llama-3.1-8B": {
+    "n_layers": 32,
+    "n_heads": 32,
+    "n_valid_samples": 0,
+    "critical_heads": [
+      31,
+      30,
+      29
+    ],
+    "top5_head_mean_rank_change": [
+      [
+        0,
+        0.0
+      ],
+      [
+        1,
+        0.0
+      ],
+      [
+        2,
+        0.0
+      ],
+      [
+        3,
+        0.0
+      ],
+      [
+        4,
+        0.0
+      ]
+    ]
+  },
+  "mistralai/Mistral-7B-v0.1": {
+    "n_layers": 32,
+    "n_heads": 32,
+    "n_valid_samples": 146,
+    "critical_heads": [
+      25,
+      20,
+      5
+    ],
+    "top5_head_mean_rank_change": [
+      [
+        25,
+        0.03424657534246575
+      ],
+      [
+        5,
+        0.0273972602739726
+      ],
+      [
+        12,
+        0.0273972602739726
+      ],
+      [
+        20,
+        0.0273972602739726
+      ],
+      [
+        21,
+        0.02054794520547945
+      ]
+    ]
+  },
+  "EleutherAI/pythia-6.9b": {
+    "n_layers": 32,
+    "n_heads": 32,
+    "n_valid_samples": 0,
+    "critical_heads": [
+      31,
+      30,
+      29
+    ],
+    "top5_head_mean_rank_change": [
+      [
+        0,
+        0.0
+      ],
+      [
+        1,
+        0.0
+      ],
+      [
+        2,
+        0.0
+      ],
+      [
+        3,
+        0.0
+      ],
+      [
+        4,
+        0.0
+      ]
+    ]
+  },
+  "google/gemma-7b": {
+    "n_layers": 28,
+    "n_heads": 16,
+    "n_valid_samples": 0,
+    "critical_heads": [
+      15
+    ],
+    "top5_head_mean_rank_change": [
+      [
+        0,
+        0.0
+      ],
+      [
+        1,
+        0.0
+      ],
+      [
+        2,
+        0.0
+      ],
+      [
+        3,
+        0.0
+      ],
+      [
+        4,
+        0.0
+      ]
+    ]
+  }
+}

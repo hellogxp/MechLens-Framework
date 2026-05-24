@@ -1,0 +1,57 @@
+{
+  "Qwen/Qwen2.5-7B": {
+    "n_layers": 28,
+    "late_crystallization_pct": 84.9,
+    "mean_fep_depth": 97.0,
+    "correct_at_final_pct": 0.0,
+    "fep_distribution": {
+      "early_(<50%)": 0,
+      "mid_(50-80%)": 46,
+      "late_(>80%)": 771
+    }
+  },
+  "meta-llama/Llama-3.1-8B": {
+    "n_layers": 32,
+    "late_crystallization_pct": 70.4,
+    "mean_fep_depth": 91.8,
+    "correct_at_final_pct": 0.0,
+    "fep_distribution": {
+      "early_(<50%)": 37,
+      "mid_(50-80%)": 122,
+      "late_(>80%)": 658
+    }
+  },
+  "mistralai/Mistral-7B-v0.1": {
+    "n_layers": 32,
+    "late_crystallization_pct": 26.8,
+    "mean_fep_depth": 82.2,
+    "correct_at_final_pct": 66.8,
+    "fep_distribution": {
+      "early_(<50%)": 62,
+      "mid_(50-80%)": 200,
+      "late_(>80%)": 555
+    }
+  },
+  "EleutherAI/pythia-6.9b": {
+    "n_layers": 32,
+    "late_crystallization_pct": 93.4,
+    "mean_fep_depth": 96.2,
+    "correct_at_final_pct": 0.0,
+    "fep_distribution": {
+      "early_(<50%)": 45,
+      "mid_(50-80%)": 9,
+      "late_(>80%)": 763
+    }
+  },
+  "google/gemma-7b": {
+    "n_layers": 28,
+    "late_crystallization_pct": 89.8,
+    "mean_fep_depth": 97.7,
+    "correct_at_final_pct": 0.0,
+    "fep_distribution": {
+      "early_(<50%)": 0,
+      "mid_(50-80%)": 47,
+      "late_(>80%)": 770
+    }
+  }
+}

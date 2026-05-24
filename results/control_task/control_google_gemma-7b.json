@@ -1,0 +1,16 @@
+{
+  "sst2": {
+    "task": "sst2",
+    "model": "google/gemma-7b",
+    "n_samples": 200,
+    "late_crystallization_pct": 100.0,
+    "mean_fep_depth": 100.0
+  },
+  "nli": {
+    "task": "nli",
+    "model": "google/gemma-7b",
+    "n_samples": 10,
+    "late_crystallization_pct": 100.0,
+    "mean_fep_depth": 100.0
+  }
+}
