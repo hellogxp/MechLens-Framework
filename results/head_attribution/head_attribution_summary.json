@@ -1,158 +1,158 @@
 {
-  "Qwen/Qwen2.5-7B": {
-    "n_layers": 28,
-    "n_heads": 28,
-    "n_valid_samples": 0,
-    "critical_heads": [
-      27,
-      26
-    ],
-    "top5_head_mean_rank_change": [
-      [
-        0,
-        0.0
-      ],
-      [
-        1,
-        0.0
-      ],
-      [
-        2,
-        0.0
-      ],
-      [
-        3,
-        0.0
-      ],
-      [
-        4,
-        0.0
-      ]
-    ]
-  },
-  "meta-llama/Llama-3.1-8B": {
-    "n_layers": 32,
-    "n_heads": 32,
-    "n_valid_samples": 0,
-    "critical_heads": [
-      31,
-      30,
-      29
-    ],
-    "top5_head_mean_rank_change": [
-      [
-        0,
-        0.0
-      ],
-      [
-        1,
-        0.0
-      ],
-      [
-        2,
-        0.0
-      ],
-      [
-        3,
-        0.0
-      ],
-      [
-        4,
-        0.0
-      ]
-    ]
-  },
-  "mistralai/Mistral-7B-v0.1": {
-    "n_layers": 32,
-    "n_heads": 32,
-    "n_valid_samples": 146,
-    "critical_heads": [
-      25,
-      20,
-      5
-    ],
-    "top5_head_mean_rank_change": [
-      [
-        25,
-        0.03424657534246575
-      ],
-      [
-        5,
-        0.0273972602739726
-      ],
-      [
-        12,
-        0.0273972602739726
-      ],
-      [
-        20,
-        0.0273972602739726
-      ],
-      [
-        21,
-        0.02054794520547945
-      ]
-    ]
-  },
   "EleutherAI/pythia-6.9b": {
     "n_layers": 32,
     "n_heads": 32,
-    "n_valid_samples": 0,
+    "n_valid_samples": 200,
     "critical_heads": [
-      31,
-      30,
-      29
+      28,
+      23,
+      7
     ],
     "top5_head_mean_rank_change": [
       [
-        0,
-        0.0
+        28,
+        -74.985
       ],
       [
-        1,
-        0.0
+        23,
+        -80.085
       ],
       [
-        2,
-        0.0
+        7,
+        -80.58
       ],
       [
-        3,
-        0.0
+        9,
+        -81.76
       ],
       [
-        4,
-        0.0
+        24,
+        -81.855
+      ]
+    ]
+  },
+  "Qwen/Qwen2.5-7B": {
+    "n_layers": 28,
+    "n_heads": 28,
+    "n_valid_samples": 200,
+    "critical_heads": [
+      13,
+      12
+    ],
+    "top5_head_mean_rank_change": [
+      [
+        13,
+        -2829.17
+      ],
+      [
+        12,
+        -2835.145
+      ],
+      [
+        10,
+        -2896.835
+      ],
+      [
+        9,
+        -2949.09
+      ],
+      [
+        22,
+        -2989.545
       ]
     ]
   },
   "google/gemma-7b": {
     "n_layers": 28,
     "n_heads": 16,
-    "n_valid_samples": 0,
+    "n_valid_samples": 200,
     "critical_heads": [
-      15
+      11
     ],
     "top5_head_mean_rank_change": [
       [
-        0,
-        0.0
+        11,
+        -176763.12
       ],
       [
-        1,
-        0.0
-      ],
-      [
-        2,
-        0.0
+        10,
+        -179045.56
       ],
       [
         3,
-        0.0
+        -179505.635
       ],
       [
-        4,
-        0.0
+        7,
+        -179521.595
+      ],
+      [
+        0,
+        -179577.875
+      ]
+    ]
+  },
+  "meta-llama/Llama-3.1-8B": {
+    "n_layers": 32,
+    "n_heads": 32,
+    "n_valid_samples": 200,
+    "critical_heads": [
+      3,
+      25,
+      7
+    ],
+    "top5_head_mean_rank_change": [
+      [
+        3,
+        -911.82
+      ],
+      [
+        25,
+        -930.375
+      ],
+      [
+        7,
+        -935.93
+      ],
+      [
+        24,
+        -940.34
+      ],
+      [
+        1,
+        -951.305
+      ]
+    ]
+  },
+  "mistralai/Mistral-7B-v0.1": {
+    "n_layers": 32,
+    "n_heads": 32,
+    "n_valid_samples": 200,
+    "critical_heads": [
+      25,
+      29,
+      11
+    ],
+    "top5_head_mean_rank_change": [
+      [
+        25,
+        -0.985
+      ],
+      [
+        29,
+        -1.06
+      ],
+      [
+        11,
+        -1.12
+      ],
+      [
+        2,
+        -1.145
+      ],
+      [
+        20,
+        -1.18
       ]
     ]
   }
