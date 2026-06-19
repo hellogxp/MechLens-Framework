@@ -292,18 +292,16 @@ def run_head_attribution_for_model(model, tokenizer, model_name, dataset, max_sa
             logger.warning(f"  Error sample {idx}: {e}")
             continue
 
-    # Aggregate
+    # Aggregate over all samples (not just "correct" ones)
     head_mean_rank_change = np.zeros(n_heads)
     head_freq_top5 = np.zeros(n_heads)
-    valid_count = 0
+    valid_count = len(results)  # Use all samples
 
     for r in results:
-        if r.get("baseline_final_rank", 999) < 10:
-            valid_count += 1
-            for h_info in r["head_attributions"]:
-                head_mean_rank_change[h_info["head"]] += h_info["rank_change"]
-            for h in r["top_heads"]:
-                head_freq_top5[h] += 1
+        for h_info in r["head_attributions"]:
+            head_mean_rank_change[h_info["head"]] += h_info["rank_change"]
+        for h in r["top_heads"]:
+            head_freq_top5[h] += 1
 
     if valid_count > 0:
         head_mean_rank_change /= valid_count
