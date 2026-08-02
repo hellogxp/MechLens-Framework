@@ -12,10 +12,12 @@ This anonymous artifact accompanies the BlackboxNLP 2026 manuscript **“First I
 
 ## Canonical evidence
 
-- `results/corrected_fep/`: six-model TruthfulQA, Qwen MMLU, and five-model SST-2 trajectories with checksums.
-- `results/prompt_sensitivity/`: two additional full TruthfulQA prompt-template reruns.
-- `results/analysis/`: paper tables, intervals, threshold sensitivity, and paired tests.
-- `paper-blackboxnlp/`: anonymous source and compiled six-page PDF.
+All submission-specific material is isolated under `blackboxnlp-2026/`:
+
+- `blackboxnlp-2026/results/corrected_fep/`: six-model TruthfulQA, Qwen MMLU, and five-model SST-2 trajectories with checksums.
+- `blackboxnlp-2026/results/prompt_sensitivity/`: two additional full TruthfulQA prompt-template reruns.
+- `blackboxnlp-2026/results/analysis/`: paper tables, intervals, threshold sensitivity, and paired tests.
+- `blackboxnlp-2026/paper/`: anonymous source and compiled six-page PDF.
 
 The main finding is methodological: vocabulary readout is sensitive to censoring, trajectory stability, prompt wording, and answer-space format. It is not evidence of where knowledge is stored or first used causally.
 
@@ -24,10 +26,10 @@ The main finding is methodological: vocabulary readout is sensitive to censoring
 ```bash
 pip install -e ".[dev]"
 PYTHONPATH=src pytest -q tests/unit/test_fep.py tests/unit/test_fep_analysis.py
-PYTHONPATH=src python experiments/analyze_corrected_fep.py
+python blackboxnlp-2026/experiments/analyze_corrected_fep.py
 ```
 
-GPU reruns use `experiments/run_corrected_fep.py`. Canonical runs used Python 3.12.13, PyTorch 2.10.0, Transformers 4.48.3, CUDA 12.8, bfloat16, one NVIDIA H20, and seed 42.
+GPU reruns use `blackboxnlp-2026/experiments/run_corrected_fep.py`. Canonical runs used Python 3.12.13, PyTorch 2.10.0, Transformers 4.48.3, CUDA 12.8, bfloat16, one NVIDIA H20, and seed 42.
 
 ## License
 

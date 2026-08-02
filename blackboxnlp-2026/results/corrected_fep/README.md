@@ -85,7 +85,7 @@ calibration, not the mere presence of task-discriminative information.
 
 ## Reproduction
 
-The canonical runner is `experiments/run_corrected_fep.py`; pure trajectory and
+The canonical runner is `blackboxnlp-2026/experiments/run_corrected_fep.py`; pure trajectory and
 aggregation logic is in `src/mechlens/fep.py` and covered by unit tests. Raw
 JSON files are committed as deterministic `.json.gz` archives. They contain
 per-sample ranks, probabilities, trajectories, alignment metadata, candidate

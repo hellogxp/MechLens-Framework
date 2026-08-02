@@ -7,12 +7,20 @@ import argparse
 import csv
 import gzip
 import json
+import sys
 from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
 
-from mechlens.fep_analysis import mcnemar_exact_pvalue, summarize_rank_trajectories
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+BLACKBOX_ROOT = PROJECT_ROOT / "blackboxnlp-2026"
+sys.path.insert(0, str(PROJECT_ROOT / "src"))
+
+from mechlens.fep_analysis import (  # noqa: E402, I001
+    mcnemar_exact_pvalue,
+    summarize_rank_trajectories,
+)
 
 
 DISPLAY_NAMES = {
@@ -197,10 +205,22 @@ def plot_task_format(artifacts: list[dict], figures_dir: Path) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--input-dir", type=Path, default=Path("results/blackboxnlp2026/corrected_fep"))
-    parser.add_argument("--output-dir", type=Path, default=Path("results/blackboxnlp2026/analysis"))
-    parser.add_argument("--figures-dir", type=Path, default=Path("paper-blackboxnlp/figures"))
-    parser.add_argument("--prompt-dir", type=Path, default=Path("results/blackboxnlp2026/prompt_sensitivity"))
+    parser.add_argument(
+        "--input-dir",
+        type=Path,
+        default=BLACKBOX_ROOT / "results" / "corrected_fep",
+    )
+    parser.add_argument(
+        "--output-dir", type=Path, default=BLACKBOX_ROOT / "results" / "analysis"
+    )
+    parser.add_argument(
+        "--figures-dir", type=Path, default=BLACKBOX_ROOT / "paper" / "figures"
+    )
+    parser.add_argument(
+        "--prompt-dir",
+        type=Path,
+        default=BLACKBOX_ROOT / "results" / "prompt_sensitivity",
+    )
     args = parser.parse_args()
     args.output_dir.mkdir(parents=True, exist_ok=True)
     args.figures_dir.mkdir(parents=True, exist_ok=True)

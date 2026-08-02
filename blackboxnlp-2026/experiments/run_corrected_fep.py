@@ -8,8 +8,8 @@ does not overwrite legacy FEP outputs.  Every sample must pass two gates:
    a bounded numerical tolerance of the model logits.
 
 Examples:
-    python experiments/run_corrected_fep.py --model qwen7 --max-samples 50
-    python experiments/run_corrected_fep.py --model qwen7 --dataset mmlu --max-samples 50
+    python blackboxnlp-2026/experiments/run_corrected_fep.py --model qwen7 --max-samples 50
+    python blackboxnlp-2026/experiments/run_corrected_fep.py --model qwen7 --dataset mmlu --max-samples 50
 """
 
 from __future__ import annotations
@@ -33,7 +33,8 @@ os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")
 
 import torch
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+BLACKBOX_ROOT = PROJECT_ROOT / "blackboxnlp-2026"
 sys.path.insert(0, str(PROJECT_ROOT / "src"))
 
 from mechlens.fep import (  # noqa: E402
@@ -137,7 +138,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--output-dir",
         type=Path,
-        default=PROJECT_ROOT / "results" / "corrected_fep",
+        default=BLACKBOX_ROOT / "results" / "corrected_fep",
     )
     parser.add_argument("--checkpoint-every", type=int, default=10)
     parser.add_argument("--max-prompt-tokens", type=int, default=512)
