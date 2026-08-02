@@ -1,8 +1,12 @@
 import json
+from pathlib import Path
 import numpy as np
 from scipy.stats import binomtest
 
-with open('results/rebuttal_2026may/e1_caa_dola_bootstrap.json') as f:
+project_root = Path(__file__).resolve().parent.parent
+result_file = project_root / "results" / "qwen_7b" / "e1_caa_dola_bootstrap.json"
+
+with result_file.open() as f:
     d = json.load(f)
 
 caa_samples = d['caa_per_sample']

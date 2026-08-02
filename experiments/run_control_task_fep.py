@@ -1,8 +1,7 @@
-"""Non-Factual Control Task FEP Detection - Rebuttal Experiment.
+"""Non-factual control-task FEP detection.
 
-Addresses reviewer concern (9UHF-Reject-2):
-  "It's unclear the extent to which the crystallization finding is about
-   factual knowledge per se, or about a larger class of token prediction."
+Tests whether the observed FEP profile is specific to factual recall or also
+appears in a broader class of token-prediction tasks.
 
 Design:
   - Task: SST-2 sentiment analysis (positive/negative classification)

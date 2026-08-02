@@ -1,8 +1,7 @@
 """Instruction-Tuned Model FEP Pilot Experiment.
 
-Tests whether Late Crystallization persists in instruction-tuned (chat) models.
-This addresses the reviewer concern: "Results may not generalize to
-instruction-tuned or RLHF-aligned models."
+Tests whether late vocabulary-space decodability persists in instruction-tuned
+or RLHF-aligned models.
 
 Uses Qwen2.5-7B-Instruct as primary target (same architecture as base model,
 enabling direct comparison of FEP distributions).

@@ -5,7 +5,7 @@ Runs CAA and DoLa on Qwen2.5-7B TruthfulQA, saves per-question results,
 then bootstraps (n=1000) to compute the p-value for the DoLa > CAA reversal.
 
 Usage: python e1_caa_dola_bootstrap.py
-Output: results/rebuttal_2026may/e1_caa_dola_bootstrap.json
+Output: results/qwen_7b/e1_caa_dola_bootstrap.json
 """
 import json
 import logging
@@ -25,7 +25,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT / "src"))
 sys.path.insert(0, str(PROJECT_ROOT))
 
-RESULTS_DIR = PROJECT_ROOT / "results" / "rebuttal_2026may"
+RESULTS_DIR = PROJECT_ROOT / "results" / "qwen_7b"
 RESULTS_DIR.mkdir(parents=True, exist_ok=True)
 
 MODEL_PATH = os.environ.get("MECHLENS_MODEL_PATH", "Qwen/Qwen2.5-7B")
