@@ -8,6 +8,7 @@ import csv
 import gzip
 import json
 import sys
+from itertools import combinations
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -18,6 +19,8 @@ BLACKBOX_ROOT = PROJECT_ROOT / "blackboxnlp-2026"
 sys.path.insert(0, str(PROJECT_ROOT / "src"))
 
 from mechlens.fep_analysis import (  # noqa: E402, I001
+    benjamini_hochberg_adjusted_pvalues,
+    holm_adjusted_pvalues,
     mcnemar_exact_pvalue,
     summarize_rank_trajectories,
 )
@@ -103,6 +106,127 @@ def build_tables(artifacts: list[dict], output_dir: Path) -> None:
         )
     write_csv(output_dir / "mmlu_groups.csv", group_rows)
 
+    build_single_layer_sensitivity(artifacts, output_dir)
+    build_pairwise_final_visibility(artifacts, output_dir)
+
+
+def build_single_layer_sensitivity(artifacts: list[dict], output_dir: Path) -> None:
+    """Measure how much each TruthfulQA readout affects trajectory summaries."""
+
+    layer_rows = []
+    summary_rows = []
+    truth = [item for item in artifacts if item["experiment"]["dataset"] == "truthfulqa"]
+    for artifact in truth:
+        samples = artifact["per_sample_results"]
+        model = DISPLAY_NAMES.get(
+            artifact["experiment"]["model_key"], artifact["experiment"]["model_key"]
+        )
+        n_layers = len(samples[0]["layer_ranks"])
+        raw = summarize_rank_trajectories(samples, top_k=10)
+        prevalence = np.asarray(
+            [[rank < 10 for rank in sample["layer_ranks"]] for sample in samples]
+        ).mean(axis=0)
+        medians = np.median(
+            np.asarray([sample["layer_ranks"] for sample in samples]), axis=0
+        )
+        model_rows = []
+        for layer_index in range(n_layers):
+            masked = summarize_rank_trajectories(
+                samples, top_k=10, ignored_layer_index=layer_index
+            )
+            row = {
+                "model": model,
+                "layer_number": layer_index + 1,
+                "normalized_depth": (layer_index + 1) / n_layers,
+                "top10_prevalence": prevalence[layer_index],
+                "median_target_rank": medians[layer_index],
+                "raw_dropout_pct": raw["dropout_pct"],
+                "masked_dropout_pct": masked["dropout_pct"],
+                "dropout_reduction_pct": raw["dropout_pct"] - masked["dropout_pct"],
+                "raw_persistent_depth": raw["mean_persistent_depth_final"],
+                "masked_persistent_depth": masked["mean_persistent_depth_final"],
+            }
+            layer_rows.append(row)
+            model_rows.append(row)
+        most_influential = max(model_rows, key=lambda row: row["dropout_reduction_pct"])
+        layer_index = int(most_influential["layer_number"]) - 1
+        summary_rows.append(
+            {
+                "model": model,
+                "layers": n_layers,
+                "most_influential_layer_number": layer_index + 1,
+                "top10_prevalence_at_layer": prevalence[layer_index],
+                "previous_layer_prevalence": (
+                    prevalence[layer_index - 1] if layer_index > 0 else ""
+                ),
+                "final_layer_prevalence": prevalence[-1],
+                "previous_layer_median_rank": (
+                    medians[layer_index - 1] if layer_index > 0 else ""
+                ),
+                "median_rank_at_layer": medians[layer_index],
+                "next_layer_median_rank": (
+                    medians[layer_index + 1] if layer_index + 1 < n_layers else ""
+                ),
+                "raw_dropout_pct": raw["dropout_pct"],
+                "masked_dropout_pct": most_influential["masked_dropout_pct"],
+                "dropout_reduction_pct": most_influential["dropout_reduction_pct"],
+                "raw_persistent_depth": raw["mean_persistent_depth_final"],
+                "masked_persistent_depth": most_influential[
+                    "masked_persistent_depth"
+                ],
+            }
+        )
+    write_csv(output_dir / "layer_influence.csv", layer_rows)
+    write_csv(output_dir / "single_layer_sensitivity.csv", summary_rows)
+
+
+def build_pairwise_final_visibility(artifacts: list[dict], output_dir: Path) -> None:
+    """Run paired model comparisons with family- and FDR-adjusted p-values."""
+
+    truth = [item for item in artifacts if item["experiment"]["dataset"] == "truthfulqa"]
+    rows = []
+    for first, second in combinations(truth, 2):
+        first_by_id = {
+            str(sample["id"]): bool(sample["final_in_topk"])
+            for sample in first["per_sample_results"]
+        }
+        second_by_id = {
+            str(sample["id"]): bool(sample["final_in_topk"])
+            for sample in second["per_sample_results"]
+        }
+        if first_by_id.keys() != second_by_id.keys():
+            raise ValueError("TruthfulQA artifacts do not contain identical sample IDs")
+        first_only = sum(
+            first_by_id[sample_id] and not second_by_id[sample_id]
+            for sample_id in first_by_id
+        )
+        second_only = sum(
+            second_by_id[sample_id] and not first_by_id[sample_id]
+            for sample_id in first_by_id
+        )
+        rows.append(
+            {
+                "model_a": DISPLAY_NAMES.get(
+                    first["experiment"]["model_key"], first["experiment"]["model_key"]
+                ),
+                "model_b": DISPLAY_NAMES.get(
+                    second["experiment"]["model_key"], second["experiment"]["model_key"]
+                ),
+                "a_only_final_top10": first_only,
+                "b_only_final_top10": second_only,
+                "mcnemar_exact_p": mcnemar_exact_pvalue(first_only, second_only),
+            }
+        )
+    raw_pvalues = [row["mcnemar_exact_p"] for row in rows]
+    holm = holm_adjusted_pvalues(raw_pvalues)
+    bh = benjamini_hochberg_adjusted_pvalues(raw_pvalues)
+    for row, holm_pvalue, bh_pvalue in zip(rows, holm, bh, strict=True):
+        row["holm_adjusted_p"] = holm_pvalue
+        row["holm_reject_0.05"] = holm_pvalue <= 0.05
+        row["bh_adjusted_p"] = bh_pvalue
+        row["bh_reject_0.05"] = bh_pvalue <= 0.05
+    write_csv(output_dir / "pairwise_final_visibility.csv", rows)
+
 
 def build_prompt_table(
     artifacts: list[dict], prompt_dir: Path, output_dir: Path
@@ -170,7 +294,7 @@ def plot_truthfulqa(artifacts: list[dict], figures_dir: Path) -> None:
     dropout = [item["summary"]["dropout_after_entry_pct"] for item in truth]
     y = np.arange(len(names))
     ax_bar.barh(y - 0.18, never, height=0.34, label="Never observed")
-    ax_bar.barh(y + 0.18, dropout, height=0.34, label="Drops after entry")
+    ax_bar.barh(y + 0.18, dropout, height=0.34, label="Any later absence")
     ax_bar.set(yticks=y, yticklabels=names, xlabel="Fraction of examples", xlim=(0, 0.55))
     ax_bar.invert_yaxis()
     ax_bar.grid(axis="x", alpha=0.2)

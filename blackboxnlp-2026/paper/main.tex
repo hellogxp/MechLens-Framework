@@ -1,4 +1,4 @@
-% MechLens: BlackboxNLP 2026 revision of the ARR-reviewed manuscript
+% Anonymous BlackboxNLP 2026 revision of the ARR-reviewed manuscript
 
 \documentclass[11pt]{article}
 \usepackage[review]{acl}
@@ -16,7 +16,6 @@
 \usepackage{xcolor}
 \usepackage{url}
 
-\newcommand{\mechlens}{\textsc{MechLens}}
 \newcommand{\fep}{\textsc{FEP}}
 
 \title{First Is Not Stable: Auditing Layerwise Vocabulary Readout in Language Models}
@@ -26,7 +25,7 @@
 \maketitle
 
 \begin{abstract}
-Vocabulary projections are often used to ask when an answer becomes visible inside a language model. A common scalar summary---the first layer at which a target enters the vocabulary top-$k$---has two failure modes: a target that never enters top-$k$ can be conflated with final-layer entry, and a transient entry can be mistaken for stable readout. We audit this measurement and introduce a trajectory-aware protocol that separates first entry, persistent entry, later dropout, and right-censored non-entry. Across 817 TruthfulQA questions and six 7--14B base models, 21.9--31.1\% of target tokens never enter the top-10, while 15.2--48.0\% enter and later leave it. The scalar first-entry depth hides qualitatively different dynamics: Pythia enters early but is unstable, whereas Gemma enters late and stabilizes almost exclusively at the output. Controls on MMLU and SST-2 further show strong task-format dependence. On SST-2, Mistral and Pythia reach 86.9\% and 80.8\% candidate-choice accuracy while the correct label appears in the final full-vocabulary top-10 for 0\% of examples. We therefore argue that layerwise vocabulary rank is a property of a model--prompt--target interface, not a direct measure of knowledge storage, causal use, or even candidate-task competence. We release corrected code, per-layer ranks, audit checks, and tests in \mechlens{}.
+Vocabulary projections are often used to ask when an answer becomes visible inside a language model. A common scalar summary---the first layer at which a target enters the vocabulary top-$k$---has two failure modes: a target that never enters top-$k$ can be conflated with final-layer entry, and a transient entry can be mistaken for stable readout. We audit this measurement and introduce a trajectory-aware protocol that separates first entry, persistent entry, any later absence, final disappearance, and right-censored non-entry. Across 817 TruthfulQA questions and six 6.9--14B base models, 21.9--31.1\% of target tokens never enter the top-10, while 15.2--48.0\% enter and are absent again at least once later. The largest rate is fragile: Gemma's 48.0\% is dominated by one penultimate-layer readout and falls to 23.4\% when that observation is treated as missing. Controls on MMLU and SST-2 further show strong task-format dependence. On SST-2, Mistral and Pythia reach 86.9\% and 80.8\% candidate-choice accuracy while the correct label appears in the final full-vocabulary top-10 for 0\% of examples. We therefore argue that layerwise vocabulary rank is a property of a model--prompt--target interface, not a direct measure of knowledge storage, causal use, or even candidate-task competence. We release anonymous corrected code, per-layer ranks, audit checks, and tests.
 \end{abstract}
 
 \section{Introduction}
@@ -34,9 +33,9 @@ Projecting an intermediate residual state through a language model's output head
 
 That scalar is easy to misinterpret. First, targets that never enter top-$k$ are right-censored observations; assigning them the final layer invents an event that did not occur. Second, vocabulary-rank trajectories need not be monotone. A target may enter, leave, and re-enter the top-$k$, so first entry need not mark a stable transition. Third, the rank is taken over the full vocabulary even when a task evaluates a small candidate set. It can therefore reflect answer formatting and prompt calibration rather than task competence.
 
-We present a measurement audit and a corrected trajectory protocol. We retain the useful question behind the Factual Emergence Point (FEP)---when does a specified target first become directly readable through the model's native output head?---but explicitly distinguish four outcomes: first entry, persistent entry, dropout after entry, and never observed. We also extract the target by jointly tokenizing prompt and continuation, avoiding tokenizer-boundary changes.
+We present a measurement audit and a corrected trajectory protocol. We retain the useful question behind the Factual Emergence Point (FEP)---when does a specified target first become directly readable through the model's native output head?---but explicitly distinguish first entry, persistent entry, any later absence, final disappearance, and never observed. We also extract the target by jointly tokenizing prompt and continuation, avoiding tokenizer-boundary changes.
 
-Our experiments reveal a more heterogeneous picture than a single ``late emergence'' statistic suggests. On TruthfulQA, final top-10 visibility is similar across six models (64.7--71.7\%), yet the paths differ sharply. Pythia-6.9B first exposes observed targets at 45.4\% depth on average but exhibits 28.4\% dropout; Gemma-7B first exposes them at 84.9\% depth and exhibits 48.0\% dropout, with persistent entry at 100.0\% depth. Qwen2.5-7B and 14B show similar normalized profiles, but this within-family comparison does not identify a scaling law.
+Our experiments reveal a more heterogeneous picture than a single ``late emergence'' statistic suggests. On TruthfulQA, final top-10 visibility spans 64.7--71.7\%, yet the paths differ sharply. Pythia-6.9B first exposes observed targets at 45.4\% depth on average but has a 28.4\% any-later-absence rate. Gemma-7B first exposes them at 84.9\% depth and has a raw rate of 48.0\%, but this headline is dominated by an isolated penultimate-layer readout collapse. Qwen2.5-7B and 14B show similar normalized profiles, but this within-family comparison does not identify a scaling law.
 
 Task-format controls are equally consequential. Qwen2.5-7B exposes every correct MMLU option label in its final top-10, compared with 64.7\% of TruthfulQA answer tokens. Across five models on SST-2, candidate accuracy and free-vocabulary visibility can diverge almost completely. These results narrow the interpretation of vocabulary projections and provide concrete reporting requirements for future layerwise analyses.
 
@@ -49,7 +48,7 @@ Our contributions are:
 
 \section{Related Work}
 \paragraph{Vocabulary-space projections.}
-The logit lens applies the output unembedding to intermediate states \citep{nostalgebraist2020logitlens}. \citet{geva2022transformer} study how feed-forward updates promote vocabulary concepts, and \citet{belrose2023tuned} learn layer-specific affine translators to reduce distribution shift between intermediate and final representations. The tuned lens is more predictive than the raw logit lens, but both remain vocabulary-space probes rather than localizers of stored knowledge. Recent analyses also emphasize that projection behavior can be non-monotone or depend on spectral components poorly represented by a simple token ranking \citep{cancedda2024spectral,nguyen2026iglens}. Our focus is complementary: we audit the event statistic computed from such projections.
+The logit lens applies the output unembedding to intermediate states \citep{nostalgebraist2020logitlens}. \citet{geva2022transformer} study how feed-forward updates promote vocabulary concepts. Learned transformations reduce the distribution mismatch between intermediate and final representations \citep{belrose2023tuned,yomdin2024jump}, while Future Lens decodes later tokens from a single hidden state \citep{pal2023future}. These methods underline that a raw native-unembedding projection is one readout choice, not a representation-completeness test. Layerwise decoding may also be non-monotone, multilingual trajectories may pass through an English-biased concept region, and spectral components can be poorly represented by a simple token ranking \citep{wendler2024llamas,cancedda2024spectral,nguyen2026iglens}. Our focus is complementary: we audit the event statistic computed from a fixed raw projection.
 
 \paragraph{Factual recall and causal localization.}
 Factual recall involves distributed stages and causally important intermediate modules \citep{meng2022locating,geva2023dissecting}. Model editing work identifies parameters that can alter associations \citep{meng2022mass}. A token becoming top-$k$ under an output projection neither establishes where its association is stored nor when it first affects computation. We use ``readout'' or ``visibility'' throughout for this reason.
@@ -73,7 +72,7 @@ For threshold $k$, define $b_{i,l}=\mathbb{1}[r_{i,l}<k]$. We report:
 F_i(k) &= \min\{l:b_{i,l}=1\}, \\
 P_i(k) &= \min\{l:\forall m\ge l,\ b_{i,m}=1\}.
 \end{align}
-$F_i$ is undefined when the target never enters top-$k$; $P_i$ is defined only when it is present at the final layer. We additionally report $N_i=\mathbb{1}[\sum_l b_{i,l}=0]$ and dropout $D_i$, which is one when an observed target later leaves top-$k$. Means of $F_i/L$ are conditional on observed entries; means of $P_i/L$ are conditional on final presence. We always report their denominators alongside unconditional never-observed, final-presence, and dropout rates.
+$F_i$ is undefined when the target never enters top-$k$; $P_i$ is defined only when it is present at the final layer. We additionally report $N_i=\mathbb{1}[\sum_l b_{i,l}=0]$, any-gap dropout $D_i=\mathbb{1}[\exists l<m: b_{i,l}=1\land b_{i,m}=0]$, and final disappearance $E_i=\mathbb{1}[F_i\text{ defined}\land b_{i,L}=0]$. Thus $D_i$ counts any later absence even if the target re-enters, whereas $E_i$ is the stricter entered-then-absent-at-output event. Means of $F_i/L$ are conditional on observed entries; means of $P_i/L$ are conditional on final presence. We always report their denominators alongside unconditional non-entry and final-presence rates.
 
 This decomposition prevents three different samples---never observed, final-layer first entry, and early-but-transient entry---from receiving the same scalar value.
 
@@ -90,33 +89,58 @@ Unless specified otherwise, $k=10$. Inference uses bfloat16 on one NVIDIA H20 wi
 \section{TruthfulQA Results}
 \begin{table*}[t]
 \centering\small
-\begin{tabular}{lrrrrrr}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lrrrrrrr}
 \toprule
-Model & $L$ & Ever $\uparrow$ & Never $\downarrow$ & Final $\uparrow$ & Dropout $\downarrow$ & First / Persistent depth \\
+Model & $L$ & Ever $\uparrow$ & Never $\downarrow$ & Final $\uparrow$ & Any gap $D$ $\downarrow$ & Final loss $E$ $\downarrow$ & First / Persistent depth \\
 \midrule
-Qwen2.5-7B  & 28 & 68.9 & 31.1 & 64.7 & 18.8 & .824 / .876 \\
-Qwen2.5-14B & 48 & 71.2 & 28.8 & 67.7 & 16.8 & .872 / .900 \\
-Llama-3.1-8B & 32 & 73.8 & 26.2 & 71.7 & 15.2 & .833 / .865 \\
-Mistral-7B & 32 & 73.2 & 26.8 & 67.9 & 18.5 & .788 / .835 \\
-Pythia-6.9B & 32 & 78.1 & 21.9 & 71.1 & 28.4 & .454 / .615 \\
-Gemma-7B & 28 & 76.5 & 23.5 & 71.7 & 48.0 & .849 / 1.000 \\
+Qwen2.5-7B  & 28 & 68.9 & 31.1 & 64.7 & 18.8 & 4.2 & .824 / .876 \\
+Qwen2.5-14B & 48 & 71.2 & 28.8 & 67.7 & 16.8 & 3.5 & .872 / .900 \\
+Llama-3.1-8B & 32 & 73.8 & 26.2 & 71.7 & 15.2 & 2.1 & .833 / .865 \\
+Mistral-7B & 32 & 73.2 & 26.8 & 67.9 & 18.5 & 5.3 & .788 / .835 \\
+Pythia-6.9B & 32 & 78.1 & 21.9 & 71.1 & 28.4 & 7.0 & .454 / .615 \\
+Gemma-7B & 28 & 76.5 & 23.5 & 71.7 & 48.0 & 4.8 & .849 / 1.000 \\
 \bottomrule
 \end{tabular}
-\caption{Corrected top-10 trajectories on 817 TruthfulQA examples. Percentages use all examples. First depth is conditional on ever-observed targets; persistent depth is conditional on final top-10 presence. Wilson 95\% intervals for the Never rates are at most $\pm3.3$ points and are given in the released table.}
+}
+\caption{Corrected top-10 trajectories on 817 TruthfulQA examples. Percentages use all examples. Any gap counts a later absence even after re-entry; final loss requires absence at the output. First depth is conditional on ever-observed targets; persistent depth is conditional on final presence.}
 \label{tab:truthful}
 \end{table*}
 
 \begin{figure*}[t]
 \centering
 \includegraphics[width=\textwidth]{figures/corrected_truthfulqa_trajectories.pdf}
-\caption{TruthfulQA top-10 trajectories. Left: fraction of target tokens in the vocabulary top-10 at each normalized depth. Right: right-censoring and non-monotonicity are both substantial. Pythia's early visibility plateau and Gemma's late collapse show why first entry alone is insufficient.}
+\caption{TruthfulQA top-10 trajectories. Left: fraction of target tokens in the vocabulary top-10 at each normalized depth. Right: right-censoring and non-monotonicity are both substantial. Pythia's early visibility and Gemma's penultimate-layer dip show why first entry alone is insufficient.}
 \label{fig:truthful-trajectories}
 \end{figure*}
 
-Table~\ref{tab:truthful} replaces a single ``late'' rate with distinct events. Final visibility varies by only seven points across models, but first-entry depth varies from .454 to .872. Figure~\ref{fig:truthful-trajectories} explains this discrepancy.
+Table~\ref{tab:truthful} replaces a single ``late'' rate with distinct events. Final visibility spans seven points across models, but first-entry depth varies from .454 to .872. Pairwise exact McNemar tests are exploratory: after Holm correction over all 15 model pairs, only Qwen2.5-7B versus Llama, Gemma, and Pythia remains significant at .05. Figure~\ref{fig:truthful-trajectories} shows that prevalence paths can differ even when endpoints are close.
 
 \paragraph{Early does not mean stable.}
-Pythia has the earliest conditional first entry (14.53/32 layers), yet 28.4\% of all targets drop out after entry and persistent entry moves to 19.67/32. Gemma is more extreme in the opposite direction: observed targets first enter at 23.77/28, 48.0\% of all targets drop out at least once, and final-presence cases become persistent at 27.99/28 on average. A scalar first entry calls both targets ``observed'' while missing their different dynamics.
+Pythia has the earliest conditional first entry (14.53/32 layers), yet 28.4\% of all targets are absent at least once later and persistent entry moves to 19.67/32. Gemma's raw trajectory is more extreme: observed targets first enter at 23.77/28 and 48.0\% have a later absence. These are any-gap rates, not final failures: only 7.0\% and 4.8\%, respectively, enter and end absent. A scalar first entry calls all of these targets ``observed'' while missing their different dynamics.
+
+\subsection{Sensitivity to a single readout}
+\begin{table}[t]
+\centering\small
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{lrrr}
+\toprule
+Model & Flagged layer & Raw $D$ & $D$ with readout missing \\
+\midrule
+Llama-3.1-8B & 25/32 & 15.2 & 12.1 \\
+Mistral-7B & 10/32 & 18.5 & 17.0 \\
+Qwen2.5-14B & 47/48 & 16.8 & 14.6 \\
+Qwen2.5-7B & 27/28 & 18.8 & 16.6 \\
+Gemma-7B & 27/28 & 48.0 & 23.4 \\
+Pythia-6.9B & 9/32 & 28.4 & 25.9 \\
+\bottomrule
+\end{tabular}
+}
+\caption{Leave-one-readout-out sensitivity. For each model we show the layer whose omission most reduces any-gap dropout $D$ (percent). This diagnoses trajectory fragility; it is not a corrected lens.}
+\label{tab:layer-sensitivity}
+\end{table}
+
+Gemma's 48.0\% rate is concentrated at layer 27/28: top-10 prevalence falls from 37.7\% to 0.5\% and rebounds to 71.7\%, while the median target rank changes $36\!\rightarrow\!1373\!\rightarrow\!3$. All 392 Gemma samples counted as dropout are absent at this readout. Treating it as missing reduces dropout to 23.4\% and moves mean persistent depth from 1.000 to .906 on the original 28-layer coordinate; the largest reduction for any other model is 3.1 points (Table~\ref{tab:layer-sensitivity}). This is evidence that raw-projection trajectory summaries can be dominated by one observation, not evidence that the intervening transformer block destroys and reconstructs the underlying information.
 
 \paragraph{Never observed is not final-layer entry.}
 Between 21.9\% and 31.1\% of targets are never top-10 under the native vocabulary projection. Treating these as layer $L$ would inflate conditional depths and create a spurious mass of final-layer events. Conversely, targets genuinely entering at $L$ remain observed events. Our artifacts keep the two states separate as \texttt{null} and $L$.
@@ -153,7 +177,7 @@ Increasing $k$ smoothly reduces censoring and shifts entry earlier (Table~\ref{t
 \resizebox{\columnwidth}{!}{%
 \begin{tabular}{lrrrr}
 \toprule
-Template & Ever & Final & Dropout & First / Persist. \\
+Template & Ever & Final & Any gap & First / Persist. \\
 \midrule
 \texttt{Q/A} & 68.9 & 64.7 & 18.8 & .824 / .876 \\
 \texttt{Question/Answer} & 69.6 & 65.7 & 22.3 & .818 / .865 \\
@@ -175,14 +199,14 @@ The abbreviated and expanded neutral templates give similar results (paired exac
 \end{figure}
 
 \subsection{MMLU option labels}
-Qwen2.5-7B reaches 72.0\% candidate accuracy on 1,200 MMLU examples. Every correct A/B/C/D label both enters and ends in the full-vocabulary top-10. Conditional first and persistent depths are .646 and .731, respectively. Across STEM, humanities, social sciences, and other subjects, final visibility remains 100\% while candidate accuracy ranges from 63.1\% to 80.0\%. Thus, visibility of the correct label is not correctness: several labels can be highly ranked, and task prediction depends on their relative scores.
+Qwen2.5-7B reaches 72.0\% candidate accuracy on 1,200 MMLU examples. Every correct A/B/C/D label both enters and ends in the full-vocabulary top-10. Nevertheless, 52.9\% have at least one later absence before returning; group rates range from 47.6\% to 63.6\%. Conditional first and persistent depths are .646 and .731, respectively. Across STEM, humanities, social sciences, and other subjects, final visibility remains 100\% while candidate accuracy ranges from 63.1\% to 80.0\%. Thus, visibility of the correct label is not correctness, and final presence alone also hides trajectory instability.
 
 \subsection{SST-2: candidate competence without free readout}
 \begin{table}[t]
 \centering\small
 \begin{tabular}{lrrrr}
 \toprule
-Model & Acc. & Ever & Final & Dropout \\
+Model & Acc. & Ever & Final & Any gap \\
 \midrule
 Qwen2.5-7B & 91.6 & 99.5 & 94.3 & 20.5 \\
 Mistral-7B & 86.9 & 48.9 & 0.0 & 48.9 \\
@@ -210,13 +234,13 @@ The trajectory does not show that information is absent before entry, stored at 
 The corrected TruthfulQA profiles do not preserve the architecture ordering previously suggested by a scalar final-layer statistic. Qwen2.5-7B, Llama-3.1-8B, and Mistral-7B have close first-entry depths (.824, .833, and .788) despite different intervention outcomes in preliminary experiments. FEP should therefore not be used as an intervention-selection rule without a prospective, controlled study. We exclude FEP-guided intervention, LayerNorm-boundary, and head-at-boundary results from the present claims because their layer choices depended on the audited scalar.
 
 \paragraph{Recommended reporting checklist.}
-Layerwise vocabulary-readout studies should: (1) tokenize the full prompt and continuation jointly; (2) distinguish never observed from final-layer entry; (3) report persistence or the complete trajectory, not only first entry; (4) validate the last projected state against native logits; (5) report sensitivity to $k$; (6) separate candidate-set scores from full-vocabulary ranks; and (7) name the projection explicitly and avoid causal or storage language unless independently tested.
+Layerwise vocabulary-readout studies should: (1) tokenize the full prompt and continuation jointly; (2) distinguish never observed from final-layer entry; (3) report persistence or the complete trajectory, not only first entry; (4) distinguish any intermediate gap from final disappearance; (5) validate the last projected state against native logits; (6) report sensitivity to $k$ and influential individual readouts; (7) separate candidate-set scores from full-vocabulary ranks; and (8) name the projection explicitly and avoid causal or storage language unless independently tested.
 
 \section{Conclusion}
 Layerwise vocabulary projections are informative, but their simplest event summary can be misleading. Across six language models, censoring and non-monotonicity are common, and models with similar final visibility follow qualitatively different paths. Across task formats, candidate competence can be nearly independent of full-vocabulary top-$k$ visibility. A trajectory-aware, censoring-aware protocol turns these apparent contradictions into measurable distinctions. The broader lesson is methodological: vocabulary readout should be treated as an interface-sensitive observation, not as a timestamp for knowledge itself.
 
 \section*{Limitations}
-We analyze one raw logit-lens projection, one prompt template per task, English benchmarks, base models, and only the first continuation token. The results do not establish how trained probes, alternative prompts, instruction tuning, multilingual inputs, or multi-token generation change the trajectories. Conditional means describe only observed or final-present subsets and should not be compared without their censoring rates. Our model comparisons are observational because architecture, data, optimization, tokenizer, and scale vary jointly. The MMLU sample is balanced over 24 subjects but is not the full benchmark. Finally, rank thresholds discard score margins; future work should jointly model rank, probability, and candidate-relative evidence.
+We analyze one raw logit-lens projection, one prompt template per task, English benchmarks, base models, and only the first continuation token. The results do not establish how trained probes, alternative prompts, instruction tuning, multilingual inputs, or multi-token generation change the trajectories. Gemma's single-readout collapse shows that raw-projection summaries can be sensitive to a local representation--unembedding mismatch; leave-one-readout-out analysis diagnoses but does not explain or repair that mismatch. Conditional means describe only observed or final-present subsets and should not be compared without their censoring rates. Our model comparisons are observational because architecture, data, optimization, tokenizer, and scale vary jointly. Pairwise tests are post-hoc and correction-dependent. The MMLU sample is balanced over 24 subjects but is not the full benchmark. Finally, rank thresholds discard score margins; future work should jointly model rank, probability, and candidate-relative evidence.
 
 \section*{Ethics Statement}
 This work audits an interpretability measurement and uses public benchmarks and openly released model weights. It makes no claims about individual people and introduces no new personal data. More reliable interpretation can reduce misleading claims about model internals, but vocabulary projections may still be over-trusted; we state their limits explicitly.

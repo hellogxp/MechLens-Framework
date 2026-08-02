@@ -3,6 +3,8 @@
 import pytest
 
 from mechlens.fep_analysis import (
+    benjamini_hochberg_adjusted_pvalues,
+    holm_adjusted_pvalues,
     mcnemar_exact_pvalue,
     summarize_rank_trajectories,
     trajectory_at_k,
@@ -38,6 +40,21 @@ def test_trajectory_at_k_finds_stable_suffix():
     assert result["persistent_depth"] == pytest.approx(0.8)
 
 
+def test_trajectory_mask_treats_one_readout_as_missing_in_original_coordinates():
+    result = trajectory_at_k([20, 3, 50, 2, 1], top_k=10, ignored_layer_index=2)
+    assert result["dropout_after_entry"] is False
+    assert result["persistent_layer_number"] == 2
+    assert result["persistent_depth"] == pytest.approx(0.4)
+
+
+def test_trajectory_distinguishes_any_gap_from_final_disappearance():
+    recovered = trajectory_at_k([20, 3, 50, 2], top_k=10)
+    disappeared = trajectory_at_k([20, 3, 50, 20], top_k=10)
+    assert recovered["dropout_after_entry"] is True
+    assert recovered["entered_then_disappeared"] is False
+    assert disappeared["entered_then_disappeared"] is True
+
+
 def test_wilson_interval_contains_empirical_fraction():
     low, high = wilson_interval(50, 100)
     assert low < 0.5 < high
@@ -47,6 +64,14 @@ def test_exact_mcnemar_is_symmetric_and_handles_no_disagreement():
     assert mcnemar_exact_pvalue(0, 0) == 1.0
     assert mcnemar_exact_pvalue(10, 2) == mcnemar_exact_pvalue(2, 10)
     assert mcnemar_exact_pvalue(10, 2) < 0.05
+
+
+def test_multiple_comparison_adjustments_preserve_input_order():
+    pvalues = [0.04, 0.001, 0.03]
+    assert holm_adjusted_pvalues(pvalues) == pytest.approx([0.06, 0.003, 0.06])
+    assert benjamini_hochberg_adjusted_pvalues(pvalues) == pytest.approx(
+        [0.04, 0.003, 0.04]
+    )
 
 
 def test_aggregate_conditions_depth_means_on_observed_populations():

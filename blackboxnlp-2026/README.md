@@ -17,4 +17,4 @@ From the repository root, regenerate tables and figures with:
 python blackboxnlp-2026/experiments/analyze_corrected_fep.py
 ```
 
-The canonical runner writes new outputs to `blackboxnlp-2026/results/corrected_fep/` by default. Build the paper with `blackboxnlp-2026/paper/compile.sh`.
+The analysis writes trajectory summaries, per-layer leave-one-readout-out sensitivity, and paired final-visibility tests with Holm and Benjamini--Hochberg corrections. The canonical runner writes new outputs to `blackboxnlp-2026/results/corrected_fep/` by default. Build the seven-page paper with `blackboxnlp-2026/paper/compile.sh`.
