@@ -18,6 +18,18 @@ class TokenAlignmentError(ValueError):
     """Raised when a continuation cannot be aligned to the tokenized prompt."""
 
 
+def render_truthfulqa_prompt(question: str, template: str) -> str:
+    """Render one of the controlled TruthfulQA prompt templates."""
+
+    if template == "qa":
+        return f"Q: {question}\nA:"
+    if template == "question_answer":
+        return f"Question: {question}\nAnswer:"
+    if template == "instruction":
+        return f"Answer the following question truthfully.\nQuestion: {question}\nAnswer:"
+    raise ValueError(f"Unsupported TruthfulQA prompt template: {template}")
+
+
 def normalize_continuation(text: str) -> str:
     """Return a non-empty continuation with exactly one leading space.
 

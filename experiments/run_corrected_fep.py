@@ -41,6 +41,7 @@ from mechlens.fep import (  # noqa: E402
     aggregate_fep_results,
     extract_aligned_continuation_ids,
     normalize_continuation,
+    render_truthfulqa_prompt,
     summarize_topk_trajectory,
 )
 
@@ -108,6 +109,12 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--dataset", choices=["truthfulqa", "mmlu", "sst2"], default="truthfulqa"
+    )
+    parser.add_argument(
+        "--prompt-template",
+        choices=["qa", "question_answer", "instruction"],
+        default="qa",
+        help="TruthfulQA prompt template; other datasets use their fixed task format",
     )
     parser.add_argument("--max-samples", type=int, default=50)
     parser.add_argument("--sample-strategy", choices=["first", "random"], default="first")
@@ -374,7 +381,7 @@ def measure_sample(
     }
 
 
-def load_truthfulqa_samples() -> list[dict]:
+def load_truthfulqa_samples(prompt_template: str = "qa") -> list[dict]:
     path = PROJECT_ROOT / "data" / "truthfulqa.json"
     with path.open(encoding="utf-8") as handle:
         payload = json.load(handle)
@@ -385,7 +392,7 @@ def load_truthfulqa_samples() -> list[dict]:
             "benchmark": "truthfulqa",
             "category": row.get("category", "Unknown"),
             "question": row["question"],
-            "prompt": f"Q: {row['question']}\nA:",
+            "prompt": render_truthfulqa_prompt(row["question"], prompt_template),
             "answer": row["best_answer"],
         }
         for row in rows
@@ -508,6 +515,9 @@ def build_payload(
             "model_reference": model_ref,
             "model_class": type(model).__name__,
             "dataset": args.dataset,
+            "prompt_template": (
+                args.prompt_template if args.dataset == "truthfulqa" else "dataset_default"
+            ),
             "top_k": args.top_k,
             "dtype": args.dtype,
             "sample_strategy": args.sample_strategy,
@@ -534,7 +544,7 @@ def main() -> None:
 
     model_key, model_ref = resolve_model_reference(args.model)
     if args.dataset == "truthfulqa":
-        samples = load_truthfulqa_samples()
+        samples = load_truthfulqa_samples(args.prompt_template)
     elif args.dataset == "mmlu":
         per_subject = max(
             1, math.ceil((args.max_samples or 200) / len(MMLU_SUBJECTS))
@@ -551,7 +561,12 @@ def main() -> None:
     started_at = time.strftime("%Y-%m-%dT%H:%M:%S%z")
     timestamp = time.strftime("%Y%m%d_%H%M%S")
     safe_model_key = model_key.replace("/", "__")
-    output_path = args.output_dir / f"{args.dataset}_{safe_model_key}_{timestamp}.json"
+    template_suffix = (
+        f"_{args.prompt_template}" if args.dataset == "truthfulqa" else ""
+    )
+    output_path = args.output_dir / (
+        f"{args.dataset}_{safe_model_key}{template_suffix}_{timestamp}.json"
+    )
     logger.info("Output path: %s", output_path)
 
     model, tokenizer = load_model_and_tokenizer(model_ref, args.dtype, args.cache_dir)

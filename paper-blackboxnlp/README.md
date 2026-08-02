@@ -1,14 +1,14 @@
 # BlackboxNLP 2026 manuscript
 
-This directory contains the anonymous manuscript source and the compiled PDF.
-It intentionally excludes review correspondence, author notes, and submission
-account information.
+This directory contains the anonymous manuscript source and compiled PDF for
+“First Is Not Stable: Auditing Layerwise Vocabulary Readout in Language
+Models.” It excludes review correspondence, author notes, credentials, and
+submission-account information.
 
-Build the paper from this directory with:
+Build with:
 
 ```bash
 tectonic main.tex
 ```
 
-The included `main.pdf` was generated from `main.tex`. The main text occupies
-eight pages; references and the limitations section follow.
+The compiled PDF has five pages of main text plus one page of references.
