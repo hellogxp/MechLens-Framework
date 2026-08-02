@@ -1,3 +1,5 @@
+> **Correction status (August 2, 2026):** The manuscript snapshot and legacy FEP/MMLU/SST-2 outputs in this branch predate the strict token-alignment and censoring audit. Do not use their numerical claims as canonical evidence. Corrected code, per-sample outputs, checksums, and interpretation boundaries are in [`results/corrected_fep/`](results/corrected_fep/). The manuscript will be replaced after its claims and figures are re-derived from that audit.
+
 # MechLens: Layerwise Factual Decodability Profiles and Their Relationship to Intervention Effectiveness
 
 MechLens is a mechanistic-interpretability toolkit for measuring when factual
