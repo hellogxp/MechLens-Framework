@@ -33,10 +33,22 @@ the manuscript. Do not update the paper by mixing the two result families.
 | Gemma-7B | 76.50% | 23.50% | 71.73% | 47.98% | 23.77/28 | 27.99/28 |
 
 The cross-model result is not a single ordering of "late crystallization."
-Pythia becomes decodable early but is unstable, Gemma becomes decodable later
-and is extremely unstable before the final layer, while Qwen, Llama, and
-Mistral show later and more stable trajectories. First visibility, persistence,
-and final visibility are distinct properties.
+Pythia becomes visible early but often leaves the top-10. Gemma becomes visible
+later, and its raw instability is dominated by one penultimate-layer projection:
+the any-gap rate falls from 47.98% to 23.38% when that readout is treated as
+missing. This is a raw-lens sensitivity diagnosis, not evidence that the model
+destroys and reconstructs information. First visibility, persistence, and final
+visibility are distinct properties.
+
+### TruthfulQA target audit
+
+The experiment follows the manuscript's first-continuation-token contract, but
+the reference answers are almost always longer: 97.92%--99.14% are multi-token
+under the six tokenizers. Across models, about 63.8% of lexical first-token
+targets belong to the ten most frequent types. See
+`../analysis/truthfulqa_target_audit.csv` and
+`../analysis/truthfulqa_first_token_frequencies.csv`. These results audit
+answer-prefix vocabulary readout, not whole-answer semantics.
 
 ### MMLU
 
@@ -90,6 +102,26 @@ aggregation logic is in `src/mechlens/fep.py` and covered by unit tests. Raw
 JSON files are committed as deterministic `.json.gz` archives. They contain
 per-sample ranks, probabilities, trajectories, alignment metadata, candidate
 predictions where applicable, and failure records.
+
+`RUN_MANIFEST.md` records the canonical commands, environment, public model
+IDs, and the historical provenance boundary. In particular, the August 2 GPU
+runs recorded local model paths but not immutable hub revisions or a Git
+commit. The revised runner now accepts and records model and dataset revisions;
+the missing historical values are disclosed rather than reconstructed.
+
+The analysis additionally releases:
+
+- `pairwise_first_entry_depth.csv`: paired exact sign tests on jointly observed
+  TruthfulQA items, with Holm correction;
+- `pairwise_final_visibility.csv`: exact McNemar tests with Holm and BH
+  corrections;
+- `truthfulqa_target_audit.csv` and `truthfulqa_first_token_frequencies.csv`;
+- `dataset_sample_manifest.csv`: SHA-256 digests over logical sample inputs;
+- `single_layer_sensitivity.csv` and `layer_influence.csv`.
+
+When interpreting `layer_influence.csv`, masking the final layer changes the
+last included observation to layer $L-1$; those rows are diagnostic only. The
+paper's selected layers are all non-final.
 
 Verify the raw artifacts from this directory with:
 

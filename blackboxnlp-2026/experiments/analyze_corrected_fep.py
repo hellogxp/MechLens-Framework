@@ -6,8 +6,10 @@ from __future__ import annotations
 import argparse
 import csv
 import gzip
+import hashlib
 import json
 import sys
+from collections import Counter
 from itertools import combinations
 from pathlib import Path
 
@@ -20,6 +22,7 @@ sys.path.insert(0, str(PROJECT_ROOT / "src"))
 
 from mechlens.fep_analysis import (  # noqa: E402, I001
     benjamini_hochberg_adjusted_pvalues,
+    exact_sign_test_pvalue,
     holm_adjusted_pvalues,
     mcnemar_exact_pvalue,
     summarize_rank_trajectories,
@@ -108,6 +111,9 @@ def build_tables(artifacts: list[dict], output_dir: Path) -> None:
 
     build_single_layer_sensitivity(artifacts, output_dir)
     build_pairwise_final_visibility(artifacts, output_dir)
+    build_pairwise_first_entry_depth(artifacts, output_dir)
+    build_truthfulqa_target_audit(artifacts, output_dir)
+    build_dataset_sample_manifest(artifacts, output_dir)
 
 
 def build_single_layer_sensitivity(artifacts: list[dict], output_dir: Path) -> None:
@@ -149,6 +155,10 @@ def build_single_layer_sensitivity(artifacts: list[dict], output_dir: Path) -> N
             layer_rows.append(row)
             model_rows.append(row)
         most_influential = max(model_rows, key=lambda row: row["dropout_reduction_pct"])
+        ordered_influence = sorted(
+            model_rows, key=lambda row: row["dropout_reduction_pct"], reverse=True
+        )
+        second_largest_reduction = ordered_influence[1]["dropout_reduction_pct"]
         layer_index = int(most_influential["layer_number"]) - 1
         summary_rows.append(
             {
@@ -170,6 +180,13 @@ def build_single_layer_sensitivity(artifacts: list[dict], output_dir: Path) -> N
                 "raw_dropout_pct": raw["dropout_pct"],
                 "masked_dropout_pct": most_influential["masked_dropout_pct"],
                 "dropout_reduction_pct": most_influential["dropout_reduction_pct"],
+                "second_largest_dropout_reduction_pct": second_largest_reduction,
+                "largest_to_second_ratio": (
+                    most_influential["dropout_reduction_pct"]
+                    / second_largest_reduction
+                    if second_largest_reduction > 0
+                    else ""
+                ),
                 "raw_persistent_depth": raw["mean_persistent_depth_final"],
                 "masked_persistent_depth": most_influential[
                     "masked_persistent_depth"
@@ -226,6 +243,133 @@ def build_pairwise_final_visibility(artifacts: list[dict], output_dir: Path) -> 
         row["bh_adjusted_p"] = bh_pvalue
         row["bh_reject_0.05"] = bh_pvalue <= 0.05
     write_csv(output_dir / "pairwise_final_visibility.csv", rows)
+
+
+def build_pairwise_first_entry_depth(artifacts: list[dict], output_dir: Path) -> None:
+    """Compare first-entry depths on items observed by both models."""
+
+    truth = [item for item in artifacts if item["experiment"]["dataset"] == "truthfulqa"]
+    rows = []
+    for first, second in combinations(truth, 2):
+        first_by_id = {str(sample["id"]): sample for sample in first["per_sample_results"]}
+        second_by_id = {
+            str(sample["id"]): sample for sample in second["per_sample_results"]
+        }
+        if first_by_id.keys() != second_by_id.keys():
+            raise ValueError("TruthfulQA artifacts do not contain identical sample IDs")
+        paired = [
+            (first_by_id[sample_id]["fep_depth"], second_by_id[sample_id]["fep_depth"])
+            for sample_id in first_by_id
+            if first_by_id[sample_id]["fep_observed"]
+            and second_by_id[sample_id]["fep_observed"]
+        ]
+        a_earlier = sum(a < b for a, b in paired)
+        b_earlier = sum(a > b for a, b in paired)
+        ties = sum(a == b for a, b in paired)
+        rows.append(
+            {
+                "model_a": DISPLAY_NAMES.get(
+                    first["experiment"]["model_key"], first["experiment"]["model_key"]
+                ),
+                "model_b": DISPLAY_NAMES.get(
+                    second["experiment"]["model_key"], second["experiment"]["model_key"]
+                ),
+                "jointly_observed_n": len(paired),
+                "model_a_mean_depth": np.mean([a for a, _ in paired]),
+                "model_b_mean_depth": np.mean([b for _, b in paired]),
+                "model_a_earlier_n": a_earlier,
+                "model_b_earlier_n": b_earlier,
+                "ties_n": ties,
+                "exact_sign_p": exact_sign_test_pvalue(a_earlier, b_earlier),
+            }
+        )
+    raw_pvalues = [row["exact_sign_p"] for row in rows]
+    holm = holm_adjusted_pvalues(raw_pvalues)
+    for row, adjusted in zip(rows, holm, strict=True):
+        row["holm_adjusted_p"] = adjusted
+        row["holm_reject_0.05"] = adjusted <= 0.05
+    write_csv(output_dir / "pairwise_first_entry_depth.csv", rows)
+
+
+def build_truthfulqa_target_audit(artifacts: list[dict], output_dir: Path) -> None:
+    """Describe how much the first-token target compresses multi-token answers."""
+
+    truth = [item for item in artifacts if item["experiment"]["dataset"] == "truthfulqa"]
+    summary_rows = []
+    frequency_rows = []
+    for artifact in truth:
+        model = DISPLAY_NAMES.get(
+            artifact["experiment"]["model_key"], artifact["experiment"]["model_key"]
+        )
+        samples = artifact["per_sample_results"]
+        counts = Counter(sample["target_token_str"].strip() for sample in samples)
+        summary_rows.append(
+            {
+                "model": model,
+                "n": len(samples),
+                "multi_token_answer_pct": sum(
+                    len(sample["continuation_token_ids"]) > 1 for sample in samples
+                )
+                / len(samples),
+                "distinct_lexical_first_tokens": len(counts),
+                "top10_lexical_first_token_share": sum(
+                    count for _, count in counts.most_common(10)
+                )
+                / len(samples),
+            }
+        )
+        for rank, (token, count) in enumerate(counts.most_common(), start=1):
+            frequency_rows.append(
+                {
+                    "model": model,
+                    "frequency_rank": rank,
+                    "lexical_first_token": token,
+                    "count": count,
+                    "share": count / len(samples),
+                }
+            )
+    write_csv(output_dir / "truthfulqa_target_audit.csv", summary_rows)
+    write_csv(output_dir / "truthfulqa_first_token_frequencies.csv", frequency_rows)
+
+
+def build_dataset_sample_manifest(artifacts: list[dict], output_dir: Path) -> None:
+    """Hash the logical sample inputs embedded in canonical artifacts."""
+
+    rows = []
+    for dataset in sorted({item["experiment"]["dataset"] for item in artifacts}):
+        candidates = [item for item in artifacts if item["experiment"]["dataset"] == dataset]
+        canonical = candidates[0]
+        fields = ("id", "category", "group", "question", "prompt", "answer")
+        records = [
+            {field: sample.get(field) for field in fields}
+            for sample in canonical["per_sample_results"]
+        ]
+        encoded = json.dumps(
+            records, ensure_ascii=False, sort_keys=True, separators=(",", ":")
+        ).encode("utf-8")
+        digest = hashlib.sha256(encoded).hexdigest()
+        for other in candidates[1:]:
+            other_records = [
+                {field: sample.get(field) for field in fields}
+                for sample in other["per_sample_results"]
+            ]
+            other_encoded = json.dumps(
+                other_records,
+                ensure_ascii=False,
+                sort_keys=True,
+                separators=(",", ":"),
+            ).encode("utf-8")
+            if hashlib.sha256(other_encoded).hexdigest() != digest:
+                raise ValueError(f"Canonical {dataset} artifacts contain different samples")
+        rows.append(
+            {
+                "dataset": dataset,
+                "n": len(records),
+                "logical_input_sha256": digest,
+                "fields": "+".join(fields),
+            }
+        )
+    write_csv(output_dir / "dataset_sample_manifest.csv", rows)
 
 
 def build_prompt_table(

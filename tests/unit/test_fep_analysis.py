@@ -4,6 +4,7 @@ import pytest
 
 from mechlens.fep_analysis import (
     benjamini_hochberg_adjusted_pvalues,
+    exact_sign_test_pvalue,
     holm_adjusted_pvalues,
     mcnemar_exact_pvalue,
     summarize_rank_trajectories,
@@ -64,6 +65,11 @@ def test_exact_mcnemar_is_symmetric_and_handles_no_disagreement():
     assert mcnemar_exact_pvalue(0, 0) == 1.0
     assert mcnemar_exact_pvalue(10, 2) == mcnemar_exact_pvalue(2, 10)
     assert mcnemar_exact_pvalue(10, 2) < 0.05
+
+
+def test_exact_sign_test_discards_ties_before_calling_helper():
+    assert exact_sign_test_pvalue(0, 0) == 1.0
+    assert exact_sign_test_pvalue(10, 2) == mcnemar_exact_pvalue(10, 2)
 
 
 def test_multiple_comparison_adjustments_preserve_input_order():

@@ -17,4 +17,26 @@ From the repository root, regenerate tables and figures with:
 python blackboxnlp-2026/experiments/analyze_corrected_fep.py
 ```
 
-The analysis writes trajectory summaries, per-layer leave-one-readout-out sensitivity, and paired final-visibility tests with Holm and Benjamini--Hochberg corrections. The canonical runner writes new outputs to `blackboxnlp-2026/results/corrected_fep/` by default. Build the seven-page paper with `blackboxnlp-2026/paper/compile.sh`.
+In addition to the paper summaries, this writes per-layer leave-one-readout-out
+sensitivity, paired final-visibility and first-entry-depth comparisons,
+TruthfulQA target-composition audits, and logical dataset hashes under
+`results/analysis/`.
+
+Run a new corrected measurement with, for example:
+
+```bash
+python blackboxnlp-2026/experiments/run_corrected_fep.py \
+  --model qwen7 --dataset truthfulqa --max-samples 50
+```
+
+New runner outputs default to `blackboxnlp-2026/results/corrected_fep/`.
+
+## Build the paper
+
+```bash
+cd blackboxnlp-2026/paper
+./compile.sh
+```
+
+`paper/main.pdf` is the current anonymous submission artifact. Before
+uploading, verify that the PDF and repository remain anonymous.

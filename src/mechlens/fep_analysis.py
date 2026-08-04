@@ -22,6 +22,12 @@ def mcnemar_exact_pvalue(gains: int, losses: int) -> float:
     return min(1.0, 2 * lower_tail)
 
 
+def exact_sign_test_pvalue(less: int, greater: int) -> float:
+    """Two-sided exact sign-test p-value after discarding ties."""
+
+    return mcnemar_exact_pvalue(less, greater)
+
+
 def holm_adjusted_pvalues(pvalues: Sequence[float]) -> list[float]:
     """Return Holm family-wise-error adjusted p-values in input order."""
 

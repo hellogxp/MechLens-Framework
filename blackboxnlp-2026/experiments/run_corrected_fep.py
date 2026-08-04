@@ -17,6 +17,7 @@ from __future__ import annotations
 import argparse
 import csv
 import gc
+import hashlib
 import json
 import logging
 import math
@@ -122,6 +123,16 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--top-k", type=int, default=10)
     parser.add_argument("--dtype", choices=["float16", "bfloat16"], default="bfloat16")
+    parser.add_argument(
+        "--model-revision",
+        default=None,
+        help="Immutable Hugging Face model/tokenizer revision when loading a remote ID",
+    )
+    parser.add_argument(
+        "--dataset-revision",
+        default=None,
+        help="Immutable datasets revision for remote MMLU loading",
+    )
     parser.add_argument("--cache-dir", type=Path, default=None)
     parser.add_argument(
         "--mmlu-data-dir",
@@ -156,7 +167,9 @@ def resolve_model_reference(model_arg: str) -> tuple[str, str]:
     return model_arg.replace("/", "__"), model_arg
 
 
-def load_model_and_tokenizer(model_ref: str, dtype_name: str, cache_dir: Path | None):
+def load_model_and_tokenizer(
+    model_ref: str, dtype_name: str, cache_dir: Path | None, revision: str | None
+):
     """Load one causal LM on the single experiment GPU."""
 
     from transformers import AutoModelForCausalLM, AutoTokenizer
@@ -168,6 +181,7 @@ def load_model_and_tokenizer(model_ref: str, dtype_name: str, cache_dir: Path | 
         model_ref,
         cache_dir=cache,
         trust_remote_code=True,
+        revision=revision,
     )
     logger.info("Loading model from %s (%s)", model_ref, dtype_name)
     model = AutoModelForCausalLM.from_pretrained(
@@ -177,6 +191,7 @@ def load_model_and_tokenizer(model_ref: str, dtype_name: str, cache_dir: Path | 
         device_map={"": 0},
         low_cpu_mem_usage=True,
         trust_remote_code=True,
+        revision=revision,
     )
     model.eval()
     return model, tokenizer
@@ -401,7 +416,11 @@ def load_truthfulqa_samples(prompt_template: str = "qa") -> list[dict]:
     ]
 
 
-def load_mmlu_samples(max_per_subject: int, data_dir: Path | None = None) -> list[dict]:
+def load_mmlu_samples(
+    max_per_subject: int,
+    data_dir: Path | None = None,
+    revision: str | None = None,
+) -> list[dict]:
     labels = ["A", "B", "C", "D"]
     rows = []
     for subject in MMLU_SUBJECTS:
@@ -415,7 +434,7 @@ def load_mmlu_samples(max_per_subject: int, data_dir: Path | None = None) -> lis
         else:
             from datasets import load_dataset
 
-            dataset = load_dataset("cais/mmlu", subject, split="test")
+            dataset = load_dataset("cais/mmlu", subject, split="test", revision=revision)
         for index, item in enumerate(dataset):
             if index >= max_per_subject:
                 break
@@ -487,6 +506,32 @@ def git_commit() -> str | None:
         return None
 
 
+def file_sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for block in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(block)
+    return digest.hexdigest()
+
+
+def dataset_provenance(args: argparse.Namespace) -> dict:
+    if args.dataset == "truthfulqa":
+        path = PROJECT_ROOT / "data" / "truthfulqa.json"
+        return {"source": str(path.relative_to(PROJECT_ROOT)), "sha256": file_sha256(path)}
+    if args.dataset == "mmlu":
+        return {
+            "source": str(args.mmlu_data_dir) if args.mmlu_data_dir else "cais/mmlu",
+            "revision": args.dataset_revision,
+            "subjects": MMLU_SUBJECTS,
+        }
+    assert args.sst2_data_file is not None
+    return {
+        "source": str(args.sst2_data_file),
+        "sha256": file_sha256(args.sst2_data_file),
+        "split": "validation",
+    }
+
+
 def save_payload(path: Path, payload: dict) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary_path = path.with_suffix(path.suffix + ".tmp")
@@ -501,6 +546,7 @@ def build_payload(
     model_key: str,
     model_ref: str,
     model,
+    tokenizer,
     results: list[dict],
     failures: list[dict],
     started_at: str,
@@ -514,6 +560,11 @@ def build_payload(
             "git_commit": git_commit(),
             "model_key": model_key,
             "model_reference": model_ref,
+            "requested_model_revision": args.model_revision,
+            "resolved_model_revision": getattr(model.config, "_commit_hash", None),
+            "resolved_tokenizer_revision": getattr(tokenizer, "init_kwargs", {}).get(
+                "_commit_hash"
+            ),
             "model_class": type(model).__name__,
             "dataset": args.dataset,
             "prompt_template": (
@@ -527,6 +578,7 @@ def build_payload(
             "target_definition": "first token of full prompt-conditioned continuation",
             "censoring_policy": "never-observed FEP is null",
             "layer_numbering": "fep_layer is zero-based; fep_layer_number is one-based",
+            "dataset_provenance": dataset_provenance(args),
         },
         "summary": aggregate_fep_results(results, n_layers=n_layers),
         "failures": failures,
@@ -550,7 +602,9 @@ def main() -> None:
         per_subject = max(
             1, math.ceil((args.max_samples or 200) / len(MMLU_SUBJECTS))
         )
-        samples = load_mmlu_samples(per_subject, args.mmlu_data_dir)
+        samples = load_mmlu_samples(
+            per_subject, args.mmlu_data_dir, revision=args.dataset_revision
+        )
     else:
         if args.sst2_data_file is None:
             raise ValueError("--sst2-data-file is required for the SST-2 experiment")
@@ -570,7 +624,9 @@ def main() -> None:
     )
     logger.info("Output path: %s", output_path)
 
-    model, tokenizer = load_model_and_tokenizer(model_ref, args.dtype, args.cache_dir)
+    model, tokenizer = load_model_and_tokenizer(
+        model_ref, args.dtype, args.cache_dir, args.model_revision
+    )
     final_norm, output_projection = get_final_projection(model)
     results: list[dict] = []
     failures: list[dict] = []
@@ -597,6 +653,7 @@ def main() -> None:
                 model_key,
                 model_ref,
                 model,
+                tokenizer,
                 results,
                 failures,
                 started_at,

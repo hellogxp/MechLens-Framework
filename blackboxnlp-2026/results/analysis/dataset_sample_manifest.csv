@@ -1,0 +1,4 @@
+dataset,n,logical_input_sha256,fields
+mmlu,1200,0f8f4b36b2806fac8bd2843fffba9965f1cafedd019c9f7ab8df0e3b8691e568,id+category+group+question+prompt+answer
+sst2,872,a64d999ca6b54ebc2e7f28414cc985b74f8c4ae6b6f2eb3421e7f8bc7e5734ce,id+category+group+question+prompt+answer
+truthfulqa,817,85977f54d8bd3efe7e3b3ad773d35104dba92d8e02b65048675d981874b58989,id+category+group+question+prompt+answer
