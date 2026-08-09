@@ -1,0 +1,21 @@
+\begin{tabular}{llrrrrr}
+\toprule
+Model A & Model B & A only & B only & $p$ & Holm & BH \\
+\midrule
+Llama-3.1-8B & Mistral-7B & 72 & 41 & .005 & .055 & .017 \\
+Llama-3.1-8B & Qwen2.5-14B & 96 & 63 & .011 & .104 & .023 \\
+Llama-3.1-8B & Qwen2.5-7B & 110 & 53 & $9.5{\times}10^{-6}$ & $1.4{\times}10^{-4}$ & $1.4{\times}10^{-4}$ \\
+Llama-3.1-8B & Gemma-7B & 57 & 57 & 1.000 & 1.000 & 1.000 \\
+Llama-3.1-8B & Pythia-6.9B & 65 & 60 & .721 & 1.000 & .832 \\
+Mistral-7B & Qwen2.5-14B & 83 & 81 & .938 & 1.000 & 1.000 \\
+Mistral-7B & Qwen2.5-7B & 96 & 70 & .052 & .260 & .071 \\
+Mistral-7B & Gemma-7B & 44 & 75 & .006 & .063 & .017 \\
+Mistral-7B & Pythia-6.9B & 53 & 79 & .029 & .211 & .049 \\
+Qwen2.5-14B & Qwen2.5-7B & 66 & 42 & .026 & .211 & .049 \\
+Qwen2.5-14B & Gemma-7B & 62 & 95 & .010 & .104 & .023 \\
+Qwen2.5-14B & Pythia-6.9B & 68 & 96 & .035 & .211 & .052 \\
+Qwen2.5-7B & Gemma-7B & 60 & 117 & $2.2{\times}10^{-5}$ & $3.1{\times}10^{-4}$ & $1.6{\times}10^{-4}$ \\
+Qwen2.5-7B & Pythia-6.9B & 60 & 112 & $9.0{\times}10^{-5}$ & .001 & $4.5{\times}10^{-4}$ \\
+Gemma-7B & Pythia-6.9B & 65 & 60 & .721 & 1.000 & .832 \\
+\bottomrule
+\end{tabular}

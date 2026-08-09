@@ -1,0 +1,5 @@
+frequency_cut,n_pairs,holm_significant_frequent,holm_significant_tail,sign_reversals_significant_in_both
+5,15,14,15,7
+10,15,13,12,7
+20,15,12,14,7
+30,15,12,14,8
