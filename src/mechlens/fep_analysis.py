@@ -3,8 +3,24 @@
 from __future__ import annotations
 
 import math
+from collections import Counter
 from collections.abc import Sequence
 from statistics import fmean
+
+
+def frequent_target_types(target_strings: Sequence[str], top_n: int) -> set[str]:
+    """Return the ``top_n`` most frequent target strings after stripping.
+
+    Answer-prefix targets are concentrated in a few lexical types, so readout
+    summaries have to be stratified by target frequency.  Ties beyond ``top_n``
+    are resolved by :meth:`collections.Counter.most_common`, which keeps first
+    insertion order, so the result is deterministic for a fixed input order.
+    """
+
+    if top_n <= 0:
+        raise ValueError("top_n must be positive")
+    counts = Counter(target.strip() for target in target_strings)
+    return {target for target, _ in counts.most_common(top_n)}
 
 
 def mcnemar_exact_pvalue(gains: int, losses: int) -> float:

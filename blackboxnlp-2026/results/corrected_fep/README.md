@@ -50,6 +50,25 @@ targets belong to the ten most frequent types. See
 `../analysis/truthfulqa_first_token_frequencies.csv`. These results audit
 answer-prefix vocabulary readout, not whole-answer semantics.
 
+Because that distribution is concentrated, `../analysis/first_token_strata.csv`
+and `../analysis/pairwise_first_entry_depth_by_stratum.csv` split TruthfulQA
+targets into each model's ten most frequent lexical first-token types and the
+remaining tail. Two conclusions follow. The paired model contrasts are not a
+composition artifact: 13/15 pairs remain significant under Holm correction among
+frequent types and 12/15 in the tail, with the same counts whether Holm is
+applied within a stratum or across all 30 tests. But a pooled ranking can
+invert: for 7 of the 15 pairs the sign of the depth difference reverses between
+strata, and both directions are individually Holm-significant. First entry is
+also frequency-sensitive unevenly across models: the depth gap between strata is
+at most .015 for Llama, Mistral, and Qwen2.5-14B, and .170 to .448 for
+Qwen2.5-7B, Gemma, and Pythia. Pythia's pooled .454 is a mixture of .335 over
+frequent types and .783 in the tail. Any-gap rates split the same way (Gemma
+72.7% versus 4.4%, Pythia 37.0% versus 13.2%, Qwen2.5-7B 25.7% versus 6.8%),
+which is consistent with earlier entry exposing a target to more subsequent
+readouts. `../analysis/first_token_cut_sensitivity.csv`
+sweeps the stratum cut: the reversal count is 7/15 at cuts of 5, 10, and 20 types
+and 8/15 at 30, so the conclusion does not rest on the reported cut.
+
 ### MMLU
 
 Qwen2.5-7B on 1,200 balanced examples from 24 subjects reaches 72.0% candidate
@@ -116,6 +135,18 @@ The analysis additionally releases:
 - `pairwise_final_visibility.csv`: exact McNemar tests with Holm and BH
   corrections;
 - `truthfulqa_target_audit.csv` and `truthfulqa_first_token_frequencies.csv`;
+- `first_token_strata.csv`: first-entry depth and non-entry rate per model for
+  frequent versus tail first-token types;
+- `pairwise_first_entry_depth_by_stratum.csv`: the paired depth comparison
+  repeated inside each stratum, with Holm correction applied within a stratum
+  and items of ambiguous stratum membership counted and dropped;
+- `first_token_cut_sensitivity.csv`: the same comparison recomputed at stratum
+  cuts of 5, 10, 20, and 30 types;
+- `topk_sensitivity.csv`: the $k \in \{1,3,5,10,20,50,100\}$ sweep for **all six**
+  TruthfulQA models, not only the model printed in the paper table. Non-entry
+  falls by 50.2--65.7 points and conditional first entry moves 0.122--0.263
+  earlier from $k{=}1$ to $k{=}100$, and the model ordering holds at every
+  threshold (Pythia earliest, Qwen2.5-14B latest or tied for latest);
 - `dataset_sample_manifest.csv`: SHA-256 digests over logical sample inputs;
 - `single_layer_sensitivity.csv` and `layer_influence.csv`.
 

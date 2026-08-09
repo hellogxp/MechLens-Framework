@@ -25,7 +25,7 @@
 \maketitle
 
 \begin{abstract}
-Vocabulary projections are often used to ask when a chosen answer token becomes visible inside a language model. A common scalar summary---the first layer at which the token enters the vocabulary top-$k$---has two failure modes: a token that never enters top-$k$ can be conflated with final-layer entry, and a transient entry can be mistaken for stable readout. We audit this measurement and introduce a trajectory-aware protocol that separates first entry, persistent entry, any later absence, final disappearance, and right-censored non-entry. Across 817 TruthfulQA questions and six 6.9--14B base models, 21.9--31.1\% of first answer tokens never enter the top-10, while 15.2--48.0\% enter and are absent again at least once later. The largest rate is fragile: Gemma's 48.0\% is dominated by one penultimate-layer readout and falls to 23.4\% when that observation is treated as missing. Controls on MMLU and SST-2 further show strong task-format dependence. On SST-2, Mistral and Pythia reach 86.9\% and 80.8\% candidate-choice accuracy while the correct label appears in the final full-vocabulary top-10 for 0\% of examples. We therefore argue that layerwise vocabulary rank is a property of a model--prompt--target interface, not a direct measure of knowledge storage, causal use, or even candidate-task competence. The supplementary artifact contains corrected code, per-layer ranks, audit checks, and tests.
+Vocabulary projections are often used to ask when a chosen answer token becomes visible inside a language model. A common scalar summary---the first layer at which the token enters the vocabulary top-$k$---has two failure modes: a token that never enters top-$k$ can be conflated with final-layer entry, and a transient entry can be mistaken for stable readout. We audit this measurement and introduce a trajectory-aware protocol that separates first entry, persistent entry, any later absence, final disappearance, and right-censored non-entry. Across 817 TruthfulQA questions and six 6.9--14B base models, 21.9--31.1\% of first answer tokens never enter the top-10, while 15.2--48.0\% enter and are absent again at least once later. The largest rate is fragile: Gemma's 48.0\% is dominated by one penultimate-layer readout and falls to 23.4\% when that observation is treated as missing. Entry itself is weak evidence: at first entry the target's median probability is .005--.018. Stratifying targets by first-token frequency, the direction of the depth difference reverses between strata for 7 of 15 model pairs, with both directions individually significant. Controls on MMLU and SST-2 further show strong task-format dependence. On SST-2, Mistral and Pythia reach 86.9\% and 80.8\% candidate-choice accuracy while the correct label appears in the final full-vocabulary top-10 for 0\% of examples. We therefore argue that layerwise vocabulary rank is a property of a model--prompt--target interface, not a direct measure of knowledge storage, causal use, or even candidate-task competence. The supplementary artifact contains corrected code, per-layer ranks, audit checks, and tests.
 \end{abstract}
 
 \section{Introduction}
@@ -35,7 +35,7 @@ That scalar is easy to misinterpret. First, targets that never enter top-$k$ are
 
 We present a measurement audit and a corrected trajectory protocol. We use \emph{factual emergence point} (FEP) as shorthand for the first-entry statistic: when does a specified target first become directly readable through the model's native output head? We explicitly distinguish first entry, persistent entry, any later absence, final disappearance, and never observed. We also extract the target by jointly tokenizing prompt and continuation, avoiding tokenizer-boundary changes.
 
-Our experiments reveal a more heterogeneous picture than a single ``late emergence'' statistic suggests. On TruthfulQA, final top-10 visibility spans 64.7--71.7\%, yet the paths differ sharply. Pythia-6.9B first exposes observed targets at 45.4\% depth on average but has a 28.4\% any-later-absence rate. Gemma-7B first exposes them at 84.9\% depth and has a raw rate of 48.0\%, but this headline is dominated by an isolated penultimate-layer readout collapse. Qwen2.5-7B and 14B show similar normalized profiles, but this within-family comparison does not identify a scaling law.
+Our experiments reveal a more heterogeneous picture than a single ``late emergence'' statistic suggests. On TruthfulQA, final top-10 visibility spans 64.7--71.7\%, yet the paths differ sharply. Pythia-6.9B first exposes observed targets at 45.4\% depth on average but has a 28.4\% any-later-absence rate. Gemma-7B first exposes them at 84.9\% depth and has a raw rate of 48.0\%, but this headline is dominated by an isolated penultimate-layer readout collapse. Depth orderings are not stable even within the benchmark: for 7 of 15 model pairs the ordering reverses between frequent and rare answer-prefix types. Entry is also weak evidence on its own, because the target's median probability at first entry is only .005--.018.
 
 Task-format controls are equally consequential. Qwen2.5-7B exposes every correct MMLU option label in its final top-10, compared with 64.7\% of TruthfulQA answer tokens. Across five models on SST-2, candidate accuracy and free-vocabulary visibility can diverge almost completely. These results narrow the interpretation of vocabulary projections and provide concrete reporting requirements for future layerwise analyses.
 
@@ -43,7 +43,7 @@ Our contributions are:
 \begin{itemize}
     \item a censoring- and trajectory-aware definition of layerwise target readout, with explicit token-boundary and final-logit consistency checks;
     \item a complete rerun on six models and three task settings, releasing per-sample ranks rather than only aggregate means;
-    \item evidence that first visibility, persistence, and task competence are distinct, together with a minimal reporting checklist intended to prevent over-interpretation.
+    \item evidence that first visibility, persistence, and task competence are distinct, that pairwise readout-depth orderings can reverse with target composition, that rank entry carries little probability mass, and a minimal reporting checklist intended to prevent over-interpretation.
 \end{itemize}
 
 \section{Related Work}
@@ -87,6 +87,7 @@ TruthfulQA uses all 817 questions and the first token of the reference best-answ
 Unless specified otherwise, $k=10$. Inference uses bfloat16 on one NVIDIA H20 with Python 3.12.13, PyTorch 2.10.0, Transformers 4.48.3, and CUDA 12.8. Artifacts contain prompts, aligned token IDs, ranks and probabilities at every layer, native-logit audit fields, failure records, and SHA-256 checksums. Pure alignment, censoring, persistence, and aggregation functions have CPU unit tests.
 
 \section{TruthfulQA Results}
+\label{sec:truthfulqa}
 \begin{table*}[t]
 \centering\small
 \resizebox{\textwidth}{!}{%
@@ -103,21 +104,21 @@ Gemma-7B & 28 & 76.5 & 23.5 & 71.7 & 48.0 & 4.8 & .849 / 1.000 \\
 \bottomrule
 \end{tabular}
 }
-\caption{Corrected top-10 trajectories on 817 TruthfulQA examples. Percentages use all examples. Any gap counts a later absence even after re-entry; final loss requires absence at the output. First depth is conditional on ever-observed targets; persistent depth is conditional on final presence. Wilson 95\% intervals for all rates have half-width at most 3.3 points; full intervals are released.}
+\caption{Corrected top-10 trajectories on 817 TruthfulQA examples. Percentages use all examples. Any gap counts a later absence even after re-entry; final loss requires absence at the output. First depth is conditional on ever-observed targets; persistent depth is conditional on final presence. Gemma's any-gap rate and persistent depth are dominated by one readout (Table~\ref{tab:layer-sensitivity}). Wilson 95\% intervals for all rates have half-width at most 3.5 points; full intervals are released.}
 \label{tab:truthful}
 \end{table*}
 
 \begin{figure*}[t]
 \centering
 \includegraphics[width=\textwidth]{figures/corrected_truthfulqa_trajectories.pdf}
-\caption{TruthfulQA top-10 trajectories. Left: fraction of target tokens in the vocabulary top-10 at each normalized depth. Right: right-censoring and non-monotonicity are both substantial. Pythia's early visibility and Gemma's penultimate-layer dip show why first entry alone is insufficient.}
+\caption{TruthfulQA top-10 trajectories. Left: fraction of target tokens in the vocabulary top-10 at each normalized depth. Right: right-censoring and non-monotonicity are both substantial. Pythia's early visibility and Gemma's penultimate-layer dip show why first entry alone is insufficient. Gemma's any-later-absence bar is hatched because it falls to 23.4\% once the flagged readout is treated as missing (Table~\ref{tab:layer-sensitivity}).}
 \label{fig:truthful-trajectories}
 \end{figure*}
 
-Table~\ref{tab:truthful} replaces a single ``late'' rate with distinct events. Final visibility spans seven points across models, but first-entry depth varies from .454 to .872. Pairwise exact McNemar tests on final visibility remain significant for 3/15 pairs under Holm family-wise control and 9/15 under Benjamini--Hochberg FDR control. The path differences are stronger: exact sign tests on first-entry depth, restricted to items observed by both models, survive Holm correction for 10/15 pairs. For Gemma versus Pythia, the jointly observed means are .840 versus .446 ($n{=}567$, adjusted $p<10^{-100}$). These post-hoc tests support different paths without establishing an architecture effect. Full pairwise results are released.
+Table~\ref{tab:truthful} replaces a single ``late'' rate with distinct events. Final visibility spans seven points across models, but first-entry depth varies from .454 to .872. Pairwise exact McNemar tests on final visibility remain significant for 3/15 pairs under Holm family-wise control and 9/15 under Benjamini--Hochberg FDR control. The path differences are stronger: exact sign tests on first-entry depth, restricted to items observed by both models, survive Holm correction for 10/15 pairs. For Gemma versus Pythia, the jointly observed means are .840 versus .446 ($n{=}567$, adjusted $p<10^{-100}$). These post-hoc tests support different paths without establishing an architecture effect. Appendix~\ref{app:pairwise} lists every pair, and Figure~\ref{fig:truthful-trajectories} shows the prevalence paths behind them: the endpoints converge while the interiors do not.
 
 \paragraph{Early does not mean stable.}
-Pythia has the earliest conditional first entry (14.53/32 layers), yet 28.4\% of all targets are absent at least once later and persistent entry moves to 19.67/32. Gemma's raw trajectory is more extreme: observed targets first enter at 23.77/28 and 48.0\% have a later absence. These are any-gap rates, not final failures: only 7.0\% and 4.8\%, respectively, enter and end absent. A scalar first entry calls all of these targets ``observed'' while missing their different dynamics.
+Pythia has the earliest conditional first entry (14.53/32 layers), yet 28.4\% of all targets are absent at least once later and persistent entry moves to 19.67/32. Section~\ref{sec:frequency-strata} shows that this early entry is concentrated on frequent answer-prefix types. Gemma's raw trajectory is more extreme: observed targets first enter at 23.77/28 and 48.0\% have a later absence. These are any-gap rates, not final failures: only 7.0\% and 4.8\%, respectively, enter and end absent. A scalar first entry calls all of these targets ``observed'' while missing their different dynamics.
 
 \subsection{Sensitivity to a single readout}
 \begin{table}[t]
@@ -140,13 +141,41 @@ Pythia-6.9B & 9/32 & 29.3 & 28.4 & 25.9 \\
 \label{tab:layer-sensitivity}
 \end{table}
 
-Gemma's 48.0\% rate is concentrated at layer 27/28: top-10 prevalence falls from 37.7\% to 0.5\% and rebounds to 71.7\%, while the median target rank changes $36\!\rightarrow\!1373\!\rightarrow\!3$. All 392 Gemma samples counted as dropout are absent at this readout. Treating it as missing reduces dropout to 23.4\% and moves mean persistent depth from 1.000 to .906 on the original 28-layer coordinate. Its 24.6-point reduction is 10.1 times Gemma's second-largest layer effect; the largest reduction for any other model is 3.1 points (Table~\ref{tab:layer-sensitivity}). Three of six post-hoc flagged layers are penultimate, motivating explicit sensitivity reporting near the native output. This is evidence that raw-projection trajectory summaries can be dominated by one observation, not evidence that the intervening transformer block destroys and reconstructs the underlying information.
+Gemma's 48.0\% rate is concentrated at layer 27/28: top-10 prevalence falls from 37.7\% to 0.5\% and rebounds to 71.7\%, while the median target rank changes $36\!\rightarrow\!1373\!\rightarrow\!3$. All 392 Gemma samples counted as dropout are absent at this readout. Treating it as missing reduces dropout to 23.4\% and moves mean persistent depth from 1.000 to .906 on the original 28-layer coordinate. Its 24.6-point reduction is 10.1 times Gemma's second-largest layer effect; the largest reduction for any other model is 3.1 points (Table~\ref{tab:layer-sensitivity}). The diagnostic is a maximum over layers, so small values are not evidence of fragility: Mistral's flagged readout carries only 1.8\% prevalence, making its 1.5-point effect a post-hoc maximum over 32 layers. Three of six post-hoc flagged layers are penultimate, motivating explicit sensitivity reporting near the native output. This is evidence that raw-projection trajectory summaries can be dominated by one observation, not evidence that the intervening transformer block destroys and reconstructs the underlying information.
 
 \paragraph{Never observed is not final-layer entry.}
 Between 21.9\% and 31.1\% of targets are never top-10 under the native vocabulary projection. Treating these as layer $L$ would inflate conditional depths and create a spurious mass of final-layer events. Conversely, targets genuinely entering at $L$ remain observed events. Our artifacts keep the two states separate as \texttt{null} and $L$.
 
 \paragraph{Within-family scale comparison.}
 Qwen2.5-7B and 14B have close point estimates for ever-observed rates (68.9\% vs. 71.2\%) and persistent depths (.876 vs. .900). With only two sizes and no equivalence margin, we make no profile-equivalence or scaling claim.
+
+\subsection{Target-frequency stratification}
+\label{sec:frequency-strata}
+Because 63.8\% of targets fall in ten lexical types, cross-model depth differences could reflect target composition rather than the model. The paired contrasts persist inside strata: exact sign tests on first-entry depth survive Holm correction for 13/15 pairs among frequent types and 12/15 pairs in the tail, with the same counts whether Holm is applied within each stratum or across all 30 tests. For Gemma versus Pythia the stratified means are .790 versus .334 ($n{=}424$, adjusted $p<10^{-84}$) and .989 versus .776 ($n{=}143$, adjusted $p<10^{-27}$). The path differences are therefore not a first-token composition artifact.
+
+The pooled ranking, however, can invert. For 7 of 15 pairs the sign of the depth difference reverses between strata, and both directions are individually significant after Holm correction. Mistral enters .472 later than Pythia on frequent types but .027 earlier in the tail; Llama enters .051 later than Gemma on frequent types and .170 earlier in the tail. Which model reads out earlier is thus a property of the target population as well as the model, and a single pooled depth summarizes neither stratum. The count is 7/15 at frequency cuts of 5, 10, and 20 types and 8/15 at 30, so the qualitative conclusion is insensitive to this cut (Appendix~\ref{app:cuts}).
+
+\begin{table}[t]
+\centering\small
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{lrrrrr}
+\toprule
+Model & Freq. $F$ & Tail $F$ & $\Delta$ & Freq. $N$ & Tail $N$ \\
+\midrule
+Llama-3.1-8B & .836 & .827 & $+$.009 & 22.3 & 33.1 \\
+Mistral-7B & .793 & .778 & $+$.015 & 24.1 & 31.5 \\
+Qwen2.5-14B & .867 & .882 & $-$.015 & 27.1 & 31.8 \\
+Qwen2.5-7B & .769 & .939 & $-$.170 & 26.7 & 38.9 \\
+Gemma-7B & .793 & .988 & $-$.195 & 14.4 & 39.5 \\
+Pythia-6.9B & .335 & .783 & $-$.448 & 10.0 & 42.9 \\
+\bottomrule
+\end{tabular}
+}
+\caption{First-entry depth $F$ and non-entry rate $N$ (percent) for targets whose lexical first token is among a model's ten most frequent types (521--522 items) versus the tail (295--296 items). $\Delta$ is the depth difference. Readout depth is frequency-sensitive for three models and nearly flat for three others.}
+\label{tab:frequency-strata}
+\end{table}
+
+Depth itself is also frequency-sensitive, and unevenly so (Table~\ref{tab:frequency-strata}). Llama, Mistral, and Qwen2.5-14B differ by at most .015 between strata, whereas Qwen2.5-7B, Gemma, and Pythia differ by .170--.448. Pythia's headline .454 is thus a mixture: .335 over frequent types and .783 in the tail, where it is close to Mistral's .778. Non-entry rates move in the same direction, from 10.0\% to 42.9\% for Pythia. Reporting a single conditional depth without the target-composition profile can therefore attribute a target-population effect to a model's internal timing---another way in which the measurement describes an interface. Any-gap rates split the same way: 72.7\% versus 4.4\% for Gemma, 37.0\% versus 13.2\% for Pythia, and 25.7\% versus 6.8\% for Qwen2.5-7B, against differences of at most 4.1 points for the other three models. Targets that enter earlier are exposed to more subsequent readouts, so Gemma's penultimate-layer collapse falls almost entirely on frequent types.
 
 \subsection{Sensitivity to the vocabulary threshold}
 \begin{table}[t]
@@ -164,11 +193,26 @@ $k$ & Ever & Never & Final & First / Persist. \\
 100 & 91.8 & 8.2  & 90.2 & .710 / .806 \\
 \bottomrule
 \end{tabular}
-\caption{Threshold sensitivity for Qwen2.5-7B on TruthfulQA (percent except normalized depths). Conclusions depend quantitatively on $k$, so a single threshold should not be presented as intrinsic.}
+\caption{Threshold sensitivity for Qwen2.5-7B on TruthfulQA (percent except normalized depths). Conclusions depend quantitatively on $k$, so a single threshold should not be presented as intrinsic. The same sweep for all six models is released.}
 \label{tab:topk}
 \end{table}
 
-Increasing $k$ smoothly reduces censoring and shifts entry earlier (Table~\ref{tab:topk}); there is no threshold-independent ``emergence layer.'' Even at $k=100$, however, observed targets first enter at 71.0\% depth and stabilize at 80.6\% depth on average. The appropriate conclusion is therefore conditional: direct vocabulary readout tends to improve late for this prompt and target, while its apparent timing is threshold-dependent.
+Increasing $k$ smoothly reduces censoring and shifts entry earlier (Table~\ref{tab:topk}); there is no threshold-independent ``emergence layer.'' Even at $k=100$, however, observed targets first enter at 71.0\% depth and stabilize at 80.6\% depth on average. We repeat the sweep for all six models (Appendix~\ref{app:topk}). Its direction is uniform: from $k{=}1$ to $k{=}100$, non-entry falls by 50.2--65.7 points and conditional first entry moves 0.122--0.263 earlier. The extrema are preserved at every threshold: Pythia remains earliest, and Qwen2.5-14B remains latest or tied for latest. The appropriate conclusion is therefore conditional: absolute depths and intermediate-model comparisons depend on $k$, even though these endpoint comparisons do not.
+
+\subsection{Rank entry is not probability mass}
+\label{sec:probability}
+A rank threshold treats top-10 membership as visibility, but in vocabularies of 32k--248k tokens that membership is compatible with almost no probability mass. At the rank-based first entry the target's median probability is only .005--.018, and 25.6--72.1\% of observed entries occur below .01 (Table~\ref{tab:probability}). The event that the audited statistic records is therefore weaker than the word ``visible'' suggests.
+
+Replacing the criterion changes both the timing and the population. Requiring $p\ge.05$ at some layer reduces the share of examples that ever qualify from 68.9--78.1\% to 46.3--55.8\%: about half of all targets never reach five percent probability at any layer, although most of them enter the top-10. On the 378--456 examples per model that satisfy both criteria, the probability criterion fires .042--.227 later in normalized depth, so the two events are not interchangeable even where both occur. Raising the floor to $.10$ preserves this conclusion: coverage falls to 36.0--46.9\%, and the paired delay remains positive at .055--.288. The shift is again unequal across models. Pythia's $+.227$ at the $.05$ floor is 1.8 times the next largest and 5.4 times the smallest, so the model with the earliest rank-based entry is also the one whose entry carries the least mass (median .005, with 72.1\% of entries below .01); it remains the earliest model under that probability criterion. We report the target's own probability only, because the artifacts do not store the per-layer arg-max probability, so we make no claim about the margin to the top-ranked token.
+
+\begin{table}[t]
+\centering
+\resizebox{\columnwidth}{!}{%
+\input{tables/probability_criterion}
+}
+\caption{Rank criterion versus probability criterion on 817 TruthfulQA examples. Median $p$ is the median target probability at the rank-based first entry, and the next column gives the percentage of those entries below one percent. Cover is the percentage of all examples that ever reach probability $.05$. Paired $\Delta$ is the mean depth difference between the two criteria on the examples that satisfy both, so it is a within-example comparison. Rows are ordered by $\Delta$.}
+\label{tab:probability}
+\end{table}
 
 \section{The Interface Is Part of the Measurement}
 \subsection{Controlled prompt-template variation}
@@ -189,7 +233,7 @@ Truthful instruction & 77.2 & 74.4 & 16.6 & .811 / .842 \\
 \label{tab:prompts}
 \end{table}
 
-The abbreviated and expanded neutral templates give similar results (paired exact McNemar $p=.54$ for final visibility), but adding ``Answer the following question truthfully'' increases final top-10 visibility by 9.7 points ($110$ gains vs. $31$ losses, $p<10^{-10}$) and shifts persistent entry earlier (Table~\ref{tab:prompts}). The model, questions, targets, and threshold are held fixed. Vocabulary readout is therefore not a model-only profile; semantically relevant prompt wording can materially reshape it.
+The two neutral templates are token-matched---both average 16.93 prompt tokens---and give similar results (paired exact McNemar $p=.54$ for final visibility), so relabelling the turn markers alone does not move readout. Prepending ``Answer the following question truthfully'' adds seven tokens and increases final top-10 visibility by 9.7 points ($110$ gains vs. $31$ losses, $p<10^{-10}$), while also shifting persistent entry earlier (Table~\ref{tab:prompts}). The model, questions, targets, and threshold are held fixed. Vocabulary readout is therefore not a model-only profile; an added instruction sentence can materially reshape it. We do not separate the instruction's semantics from its length, which would require a length-matched neutral prefix.
 
 \begin{figure}[t]
 \centering
@@ -199,7 +243,7 @@ The abbreviated and expanded neutral templates give similar results (paired exac
 \end{figure}
 
 \subsection{MMLU option labels}
-Qwen2.5-7B reaches 72.0\% candidate accuracy on 1,200 MMLU examples. Every correct A/B/C/D label both enters and ends in the full-vocabulary top-10. Nevertheless, 52.9\% have at least one later absence before returning; group rates range from 47.6\% to 63.6\%. Conditional first and persistent depths are .646 and .731, respectively. Across STEM, humanities, social sciences, and other subjects, final visibility remains 100\% while candidate accuracy ranges from 63.1\% to 80.0\%. Thus, visibility of the correct label is not correctness, and final presence alone also hides trajectory instability.
+Qwen2.5-7B reaches 72.0\% candidate accuracy on 1,200 MMLU examples. Figure~\ref{fig:task-format} contrasts the three target types for this model. Every correct A/B/C/D label both enters and ends in the full-vocabulary top-10. Nevertheless, 52.9\% have at least one later absence before returning; group rates range from 47.6\% to 63.6\%. Conditional first and persistent depths are .646 and .731, respectively. Across STEM, humanities, social sciences, and other subjects, final visibility remains 100\% while candidate accuracy ranges from 63.1\% to 80.0\%. Thus, visibility of the correct label is not correctness, and final presence alone also hides trajectory instability.
 
 \subsection{SST-2: candidate competence without free readout}
 \begin{table}[t]
@@ -219,7 +263,7 @@ Gemma-7B & 69.8 & 2.1 & 2.1 & 0.0 \\
 \label{tab:sst}
 \end{table}
 
-Table~\ref{tab:sst} provides the clearest interpretive stress test. Pythia correctly chooses between \texttt{negative} and \texttt{positive} on 80.8\% of examples, but neither gold-label behavior nor competence is reflected by FEP: the gold label is never in the full-vocabulary top-10. Mistral obtains 86.9\% candidate accuracy; its gold labels enter top-10 for 48.9\% of examples and then disappear in every such case. These are not contradictions. Candidate accuracy asks which permitted label scores higher, whereas FEP asks whether one label outranks almost the entire vocabulary under a free-form prompt.
+Table~\ref{tab:sst} provides the clearest interpretive stress test: the prompt is identical for all five models, yet ever-observed rates span 99.5\% to 0.0\%. Pythia correctly chooses between \texttt{negative} and \texttt{positive} on 80.8\% of examples, but neither gold-label behavior nor competence is reflected by FEP: the gold label is never in the full-vocabulary top-10. Mistral obtains 86.9\% candidate accuracy; its gold labels enter top-10 for 48.9\% of examples and then disappear in every such case. These are not contradictions. Candidate accuracy asks which permitted label scores higher, whereas FEP asks whether one label outranks almost the entire vocabulary under a free-form prompt.
 
 The same target strings also produce sharply different trajectories across models. Consequently, comparing FEP across architectures without controlling tokenization, prompt calibration, and answer space can attribute interface differences to internal computation.
 
@@ -234,24 +278,72 @@ The trajectory does not show that information is absent before entry, stored at 
 FEP should not be used as an intervention-selection rule without a prospective, controlled study. The present audit is observational: selecting a layer from the same trajectory later used to motivate an intervention would couple selection and evaluation. We therefore exclude intervention claims and restrict the paper to measurement validity.
 
 \paragraph{Recommended reporting checklist.}
-Layerwise vocabulary-readout studies should: (1) tokenize the full prompt and continuation jointly; (2) distinguish never observed from final-layer entry; (3) report persistence or the complete trajectory, not only first entry; (4) distinguish any intermediate gap from final disappearance; (5) validate the last projected state against native logits; (6) report sensitivity to $k$ and influential individual readouts; (7) separate candidate-set scores from full-vocabulary ranks; and (8) name the projection explicitly and avoid causal or storage language unless independently tested.
+Layerwise vocabulary-readout studies should: (1) tokenize the full prompt and continuation jointly; (2) distinguish never observed from final-layer entry; (3) report persistence or the complete trajectory, not only first entry; (4) distinguish any intermediate gap from final disappearance; (5) validate the last projected state against native logits; (6) report sensitivity to $k$ and influential individual readouts; (7) separate candidate-set scores from full-vocabulary ranks; (8) pair the rank criterion with a probability criterion, because top-$k$ membership can carry little mass; and (9) name the projection explicitly and avoid causal or storage language unless independently tested.
 
 \section{Conclusion}
-Layerwise vocabulary projections are informative, but their simplest event summary can be misleading. Across six language models, censoring and non-monotonicity are common, and models with similar final visibility follow qualitatively different paths. Across task formats, candidate competence can be nearly independent of full-vocabulary top-$k$ visibility. A trajectory-aware, censoring-aware protocol turns these apparent contradictions into measurable distinctions. The broader lesson is methodological: vocabulary readout should be treated as an interface-sensitive observation, not as a timestamp for knowledge itself.
+Layerwise vocabulary projections are informative, but their simplest event summary can be misleading. Across six language models, censoring and non-monotonicity are common, and models with similar final visibility follow qualitatively different paths. For 7 of 15 model pairs, which model reads out earlier reverses with the target population, so a pooled depth ranking summarizes neither stratum. Entry is also a weak event: at the moment a target enters the top-10 its median probability is only .005--.018, and a probability criterion fires later on the same examples. Across task formats, candidate competence can be nearly independent of full-vocabulary top-$k$ visibility. A trajectory-aware, censoring-aware protocol turns these apparent contradictions into measurable distinctions. The broader lesson is methodological: vocabulary readout should be treated as an interface-sensitive observation, not as a timestamp for knowledge itself.
 
 \section*{Limitations}
-We analyze one raw logit-lens projection, one prompt template per task, English benchmarks, base models, and only the first continuation token. On TruthfulQA, 97.9--99.1\% of reference answers are multi-token and the first-token distribution is concentrated, so our evidence concerns answer-prefix readout rather than full factual answers. The results do not establish how trained probes, alternative prompts, instruction tuning, multilingual inputs, or multi-token generation change the trajectories. Gemma's single-readout collapse shows that raw-projection summaries can be sensitive to a local representation--unembedding mismatch; leave-one-readout-out analysis diagnoses but does not explain or repair that mismatch. Conditional means describe only observed or final-present subsets and should not be compared without their censoring rates. Our model comparisons are observational because architecture, data, optimization, tokenizer, and scale vary jointly. Pairwise tests are post-hoc and correction-dependent. The MMLU sample is balanced over 24 subjects but is not the full benchmark. The historical GPU runs recorded local model snapshot paths but not immutable hub revisions, limiting bitwise rerun provenance; all per-sample artifacts and checksums are retained. Finally, rank thresholds discard score margins; future work should jointly model rank, probability, and candidate-relative evidence.
+We analyze one raw logit-lens projection, one prompt template per task, English benchmarks, base models, and only the first continuation token. On TruthfulQA, 97.9--99.1\% of reference answers are multi-token and the first-token distribution is concentrated, so our evidence concerns answer-prefix readout rather than full factual answers; Table~\ref{tab:frequency-strata} quantifies how much depth depends on that distribution. The results do not establish how trained probes, alternative prompts, instruction tuning, multilingual inputs, or multi-token generation change the trajectories. Gemma's single-readout collapse shows that raw-projection summaries can be sensitive to a local representation--unembedding mismatch; leave-one-readout-out analysis diagnoses but does not explain or repair that mismatch. Conditional means describe only observed or final-present subsets and should not be compared without their censoring rates. Our model comparisons are observational because architecture, data, optimization, tokenizer, and scale vary jointly. Pairwise tests are post-hoc and correction-dependent. The frequency strata use each model's ten most frequent first-token types, matching the target audit; we release a sweep over that cut, and frequency is measured within this benchmark rather than in pretraining data. The MMLU sample is balanced over 24 subjects but is not the full benchmark. The historical GPU runs recorded local model snapshot paths but not immutable hub revisions, limiting bitwise rerun provenance; all per-sample artifacts and checksums are retained. Finally, Section~\ref{sec:probability} pairs the rank criterion with a probability criterion, but we do not model candidate-relative evidence or the margin to the arg-max token, which the artifacts do not record.
 
 \section*{Ethics Statement}
 This work audits an interpretability measurement and uses public benchmarks and openly released model weights. It makes no claims about individual people and introduces no new personal data. More reliable interpretation can reduce misleading claims about model internals, but vocabulary projections may still be over-trusted; we state their limits explicitly.
 
 \section*{Reproducibility Statement}
-The supplementary artifact includes the runner, pure measurement helpers, unit tests, compressed per-sample JSON, aggregate CSV tables, figure-generation code, command manifest, environment versions, and SHA-256 checksums. All random sampling uses seed 42. Canonical files record local model references, dtype, prompts, aligned continuation IDs, target IDs, ranks and probabilities for every layer, candidate predictions where applicable, final-logit audit fields, and failures. New runs additionally record requested and resolved model/tokenizer revisions and dataset checksums or revisions. The original runs did not capture immutable model revisions; we disclose rather than reconstruct this missing provenance.
+The supplementary artifact includes the runner, pure measurement helpers, unit tests, compressed per-sample JSON, aggregate CSV tables, figure-generation code, command manifest, environment versions, and SHA-256 checksums. All random sampling uses seed 42. Canonical files record local model references, dtype, prompts, aligned continuation IDs, target IDs, ranks and probabilities for every layer, candidate predictions where applicable, final-logit audit fields, and failures. New runs additionally record requested and resolved model/tokenizer revisions and dataset checksums or revisions; the runs reported here predate that instrumentation. The original runs did not capture immutable model revisions; we disclose rather than reconstruct this missing provenance.
 
 \begingroup
 \small
 \setlength{\bibsep}{2pt}
 \bibliography{references}
 \endgroup
+
+\appendix
+
+\section{Full Threshold Sweep}
+\label{app:topk}
+Table~\ref{tab:app-topk} gives the $k$ sweep for all six models; Table~\ref{tab:topk} prints one column of it. Non-entry falls monotonically with $k$ for every model and conditional first entry moves earlier. Intermediate models do change order, but the extrema do not: Pythia is earliest and Qwen2.5-14B latest or tied for latest at every threshold.
+
+\begin{table*}[t]
+\centering
+\input{tables/appendix_topk}
+\caption{Threshold sweep on 817 TruthfulQA examples for all six models. Depths are conditional on ever-observed targets.}
+\label{tab:app-topk}
+\end{table*}
+
+\section{Complete Pairwise Comparisons}
+\label{app:pairwise}
+Tables~\ref{tab:app-visibility} and~\ref{tab:app-depth} list every model pair behind the counts in Section~\ref{sec:truthfulqa}. All tests are exact and post hoc. The visibility tests pair all 817 items; the depth tests pair only items observed by both models, so their sample sizes range from 507 to 567.
+
+\begin{table*}[t]
+\centering
+\resizebox{\textwidth}{!}{%
+\input{tables/appendix_pairwise_visibility}
+}
+\caption{Paired exact McNemar tests on final top-10 visibility. ``A only'' counts items visible for model A and not model B. Holm gives 3/15 rejections at $.05$ and Benjamini--Hochberg gives 9/15.}
+\label{tab:app-visibility}
+\end{table*}
+
+\begin{table*}[t]
+\centering
+\resizebox{\textwidth}{!}{%
+\input{tables/appendix_pairwise_depth}
+}
+\caption{Paired exact sign tests on first-entry depth, restricted to items observed by both models. $n$ is the pooled jointly observed count; the stratified counts are in the released table. $\Delta$ is the mean depth of model A minus model B, so a positive value means model A reads out later. Holm correction is applied within each of the three families. A dagger marks the seven pairs whose sign reverses between strata with both directions significant.}
+\label{tab:app-depth}
+\end{table*}
+
+\section{Stratum-Cut Sensitivity}
+\label{app:cuts}
+The frequency strata in Section~\ref{sec:frequency-strata} use each model's ten most frequent first-token types. Table~\ref{tab:app-cuts} recomputes the stratified tests at four cuts. The reversal count changes only from 7 to 8 of 15 pairs, so the qualitative conclusion is insensitive to the reported cut.
+
+\begin{table}[!ht]
+\centering
+\resizebox{\columnwidth}{!}{%
+\input{tables/appendix_cut_sensitivity}
+}
+\caption{Stratified tests recomputed at first-token frequency cuts of 5, 10, 20, and 30 types.}
+\label{tab:app-cuts}
+\end{table}
 
 \end{document}

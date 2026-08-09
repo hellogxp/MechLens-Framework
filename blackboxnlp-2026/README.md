@@ -18,9 +18,11 @@ python blackboxnlp-2026/experiments/analyze_corrected_fep.py
 ```
 
 In addition to the paper summaries, this writes per-layer leave-one-readout-out
-sensitivity, paired final-visibility and first-entry-depth comparisons,
-TruthfulQA target-composition audits, and logical dataset hashes under
-`results/analysis/`.
+sensitivity, paired final-visibility and first-entry-depth comparisons, the
+full vocabulary-threshold sweep, probability-floor criteria, TruthfulQA
+target-composition and frequency-stratum audits, and logical dataset hashes
+under `results/analysis/`. It also regenerates the appendix tables under
+`paper/tables/`.
 
 Run a new corrected measurement with, for example:
 

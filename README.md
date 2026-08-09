@@ -9,6 +9,7 @@ This artifact accompanies the anonymous BlackboxNLP 2026 manuscript **“First I
 - Separate first entry, persistent entry, any later absence, final disappearance, final presence, and non-entry.
 - Validate the final projected state against native model logits.
 - Audit sensitivity to the vocabulary threshold and influential individual readouts.
+- Pair rank-based entry with probability-floor criteria.
 - Keep candidate-set accuracy separate from full-vocabulary rank.
 
 ## Canonical evidence
@@ -17,10 +18,16 @@ All submission-specific material is isolated under `blackboxnlp-2026/`:
 
 - `results/corrected_fep/`: canonical six-model TruthfulQA, Qwen MMLU, and five-model SST-2 trajectories with checksums.
 - `results/prompt_sensitivity/`: two additional full TruthfulQA prompt-template reruns.
-- `results/analysis/`: paper tables, intervals, threshold and single-readout sensitivity, and multiplicity-adjusted paired tests.
-- `paper/`: anonymous source and compiled seven-page PDF.
+- `results/analysis/`: paper tables, threshold and single-readout sensitivity,
+  probability-floor criteria, target-frequency strata, and
+  multiplicity-adjusted paired tests.
+- `paper/`: anonymous source and compiled 12-page PDF; the main content fits
+  within the eight-page limit, followed by references and appendices.
 
-The main finding is methodological: vocabulary readout is sensitive to censoring, trajectory stability, individual readouts, prompt wording, and answer-space format. It is not evidence of where knowledge is stored or first used causally.
+The main finding is methodological: vocabulary readout is sensitive to
+censoring, trajectory stability, individual readouts, target composition,
+prompt wording, probability criteria, and answer-space format. It is not
+evidence of where knowledge is stored or first used causally.
 
 ## Reproduction
 

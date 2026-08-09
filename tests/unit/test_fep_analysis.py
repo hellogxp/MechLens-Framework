@@ -5,6 +5,7 @@ import pytest
 from mechlens.fep_analysis import (
     benjamini_hochberg_adjusted_pvalues,
     exact_sign_test_pvalue,
+    frequent_target_types,
     holm_adjusted_pvalues,
     mcnemar_exact_pvalue,
     summarize_rank_trajectories,
@@ -20,6 +21,15 @@ def test_truthfulqa_prompt_templates_are_semantically_distinct():
     assert render_truthfulqa_prompt(question, "qa") == "Q: Where is Paris?\nA:"
     assert render_truthfulqa_prompt(question, "question_answer").endswith("\nAnswer:")
     assert "truthfully" in render_truthfulqa_prompt(question, "instruction")
+
+
+def test_frequent_target_types_strips_and_respects_the_cut():
+    targets = [" No", "No", " No", " The", "The", " I", " Nothing"]
+    assert frequent_target_types(targets, 1) == {"No"}
+    assert frequent_target_types(targets, 2) == {"No", "The"}
+    assert frequent_target_types(targets, 10) == {"No", "The", "I", "Nothing"}
+    with pytest.raises(ValueError, match="top_n"):
+        frequent_target_types(targets, 0)
 
 
 def test_trajectory_at_k_keeps_censoring_and_persistence_distinct():
