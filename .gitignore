@@ -1,0 +1,121 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Testing
+.coverage
+htmlcov/
+.pytest_cache/
+.tox/
+.nox/
+
+# Type checking
+.mypy_cache/
+.pytype/
+
+# Ruff
+.ruff_cache/
+
+# Environment
+.env
+.env.local
+*.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Model weights (large files)
+*.bin
+*.pt
+*.pth
+*.safetensors
+*.gguf
+
+# HuggingFace cache
+.cache/
+
+# Results - keep results/ tracked for reproducibility
+# results/
+outputs/
+logs/
+
+# LaTeX build artifacts
+paper/*.aux
+paper/*.log
+paper/*.out
+paper/*.toc
+paper/*.bbl
+paper/*.blg
+paper/*.fdb_latexmk
+paper/*.fls
+paper/*.synctex.gz
+# Keep main.pdf for review
+# paper/*.pdf
+
+# Paper templates and archives (not needed in submission)
+paper/Template-2026/
+paper/colm2026_submission.zip
+paper/colm_template.tar.gz
+paper/overleaf_upload.zip
+paper/acl-style.zip
+paper/acl-style-files-master/
+
+# Dev session files
+PROJECT_STATUS.md
+SESSION_LOG.md
+QODER.md
+.qoder/
+.specify/
+specs/
+
+# Utility scripts (not part of framework)
+upload_github.sh
+upload_to_github.py
+causal_tracing_v2.py
+generate_figures.py
+run_comprehensive.py
+run_pythia.py
+truthfulqa.py
+
+# Empty directories
+notebooks/
+strategies/
+
+# Strategies (user-generated)
+strategies/*.json
+docs/

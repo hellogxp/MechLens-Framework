@@ -1,0 +1,914 @@
+{
+  "metadata": {
+    "name": "ChineseHallucinationBench",
+    "version": "1.0",
+    "description": "Chinese hallucination evaluation dataset covering 4 types x 4 domains",
+    "total_samples": 100,
+    "hallucination_types": ["factual_fabrication", "causal_error", "temporal_displacement", "identity_confusion"],
+    "domains": ["history", "medicine", "science", "common_sense"],
+    "target_models": ["Qwen2.5-0.5B", "Qwen2.5-7B"],
+    "created_date": "2026-02-14"
+  },
+  "samples": [
+    {
+      "id": "zh_halluc_001",
+      "question": "秦始皇统一六国是在哪一年？",
+      "ground_truth": "公元前221年",
+      "hallucination_type": "factual_fabrication",
+      "domain": "history",
+      "should_refuse": false,
+      "reference_sources": ["史记·秦始皇本纪"]
+    },
+    {
+      "id": "zh_halluc_002",
+      "question": "青霉素是谁发现的？",
+      "ground_truth": "亚历山大·弗莱明",
+      "hallucination_type": "identity_confusion",
+      "domain": "medicine",
+      "should_refuse": false,
+      "reference_sources": ["医学史"]
+    },
+    {
+      "id": "zh_halluc_003",
+      "question": "光速在真空中的速度是多少？",
+      "ground_truth": "约299792458米每秒",
+      "hallucination_type": "factual_fabrication",
+      "domain": "science",
+      "should_refuse": false,
+      "reference_sources": ["物理学常数"]
+    },
+    {
+      "id": "zh_halluc_004",
+      "question": "水的沸点在标准大气压下是多少度？",
+      "ground_truth": "100摄氏度",
+      "hallucination_type": "factual_fabrication",
+      "domain": "common_sense",
+      "should_refuse": false,
+      "reference_sources": ["基础物理"]
+    },
+    {
+      "id": "zh_halluc_005",
+      "question": "唐朝的首都是哪里？",
+      "ground_truth": "长安（今西安）",
+      "hallucination_type": "factual_fabrication",
+      "domain": "history",
+      "should_refuse": false,
+      "reference_sources": ["唐书"]
+    },
+    {
+      "id": "zh_halluc_006",
+      "question": "人体最大的器官是什么？",
+      "ground_truth": "皮肤",
+      "hallucination_type": "factual_fabrication",
+      "domain": "medicine",
+      "should_refuse": false,
+      "reference_sources": ["人体解剖学"]
+    },
+    {
+      "id": "zh_halluc_007",
+      "question": "地球的自转周期是多少？",
+      "ground_truth": "约24小时（23小时56分4秒）",
+      "hallucination_type": "temporal_displacement",
+      "domain": "science",
+      "should_refuse": false,
+      "reference_sources": ["天文学基础"]
+    },
+    {
+      "id": "zh_halluc_008",
+      "question": "一年有多少天？",
+      "ground_truth": "365天（闰年366天）",
+      "hallucination_type": "factual_fabrication",
+      "domain": "common_sense",
+      "should_refuse": false,
+      "reference_sources": ["日历知识"]
+    },
+    {
+      "id": "zh_halluc_009",
+      "question": "明朝的开国皇帝是谁？",
+      "ground_truth": "朱元璋（明太祖）",
+      "hallucination_type": "identity_confusion",
+      "domain": "history",
+      "should_refuse": false,
+      "reference_sources": ["明史"]
+    },
+    {
+      "id": "zh_halluc_010",
+      "question": "DNA的全称是什么？",
+      "ground_truth": "脱氧核糖核酸",
+      "hallucination_type": "factual_fabrication",
+      "domain": "science",
+      "should_refuse": false,
+      "reference_sources": ["分子生物学"]
+    },
+    {
+      "id": "zh_halluc_011",
+      "question": "赤壁之战发生在哪一年？",
+      "ground_truth": "公元208年",
+      "hallucination_type": "temporal_displacement",
+      "domain": "history",
+      "should_refuse": false,
+      "reference_sources": ["三国志"]
+    },
+    {
+      "id": "zh_halluc_012",
+      "question": "胰岛素是由哪个器官分泌的？",
+      "ground_truth": "胰腺",
+      "hallucination_type": "factual_fabrication",
+      "domain": "medicine",
+      "should_refuse": false,
+      "reference_sources": ["内分泌学"]
+    },
+    {
+      "id": "zh_halluc_013",
+      "question": "牛顿第一定律也叫什么定律？",
+      "ground_truth": "惯性定律",
+      "hallucination_type": "factual_fabrication",
+      "domain": "science",
+      "should_refuse": false,
+      "reference_sources": ["牛顿力学"]
+    },
+    {
+      "id": "zh_halluc_014",
+      "question": "一周有几天？",
+      "ground_truth": "7天",
+      "hallucination_type": "factual_fabrication",
+      "domain": "common_sense",
+      "should_refuse": false,
+      "reference_sources": ["日历知识"]
+    },
+    {
+      "id": "zh_halluc_015",
+      "question": "郑和下西洋始于哪一年？",
+      "ground_truth": "1405年",
+      "hallucination_type": "temporal_displacement",
+      "domain": "history",
+      "should_refuse": false,
+      "reference_sources": ["明史·郑和传"]
+    },
+    {
+      "id": "zh_halluc_016",
+      "question": "人体有多少对染色体？",
+      "ground_truth": "23对",
+      "hallucination_type": "factual_fabrication",
+      "domain": "medicine",
+      "should_refuse": false,
+      "reference_sources": ["遗传学"]
+    },
+    {
+      "id": "zh_halluc_017",
+      "question": "太阳系中最大的行星是哪个？",
+      "ground_truth": "木星",
+      "hallucination_type": "factual_fabrication",
+      "domain": "science",
+      "should_refuse": false,
+      "reference_sources": ["天文学"]
+    },
+    {
+      "id": "zh_halluc_018",
+      "question": "彩虹有几种颜色？",
+      "ground_truth": "7种（红橙黄绿蓝靛紫）",
+      "hallucination_type": "factual_fabrication",
+      "domain": "common_sense",
+      "should_refuse": false,
+      "reference_sources": ["光学基础"]
+    },
+    {
+      "id": "zh_halluc_019",
+      "question": "清朝最后一个皇帝是谁？",
+      "ground_truth": "溥仪（宣统帝）",
+      "hallucination_type": "identity_confusion",
+      "domain": "history",
+      "should_refuse": false,
+      "reference_sources": ["清史稿"]
+    },
+    {
+      "id": "zh_halluc_020",
+      "question": "血液循环是谁发现的？",
+      "ground_truth": "威廉·哈维",
+      "hallucination_type": "identity_confusion",
+      "domain": "medicine",
+      "should_refuse": false,
+      "reference_sources": ["医学史"]
+    },
+    {
+      "id": "zh_halluc_021",
+      "question": "元素周期表是谁创建的？",
+      "ground_truth": "门捷列夫",
+      "hallucination_type": "identity_confusion",
+      "domain": "science",
+      "should_refuse": false,
+      "reference_sources": ["化学史"]
+    },
+    {
+      "id": "zh_halluc_022",
+      "question": "北京的别称是什么？",
+      "ground_truth": "燕京、北平",
+      "hallucination_type": "factual_fabrication",
+      "domain": "common_sense",
+      "should_refuse": false,
+      "reference_sources": ["地理知识"]
+    },
+    {
+      "id": "zh_halluc_023",
+      "question": "辛亥革命发生在哪一年？",
+      "ground_truth": "1911年",
+      "hallucination_type": "temporal_displacement",
+      "domain": "history",
+      "should_refuse": false,
+      "reference_sources": ["中国近代史"]
+    },
+    {
+      "id": "zh_halluc_024",
+      "question": "人体正常体温是多少度？",
+      "ground_truth": "约36.5-37.5摄氏度",
+      "hallucination_type": "factual_fabrication",
+      "domain": "medicine",
+      "should_refuse": false,
+      "reference_sources": ["生理学"]
+    },
+    {
+      "id": "zh_halluc_025",
+      "question": "相对论是谁提出的？",
+      "ground_truth": "阿尔伯特·爱因斯坦",
+      "hallucination_type": "identity_confusion",
+      "domain": "science",
+      "should_refuse": false,
+      "reference_sources": ["物理学史"]
+    },
+    {
+      "id": "zh_halluc_026",
+      "question": "长江是中国第几大河？",
+      "ground_truth": "第一大河",
+      "hallucination_type": "factual_fabrication",
+      "domain": "common_sense",
+      "should_refuse": false,
+      "reference_sources": ["地理知识"]
+    },
+    {
+      "id": "zh_halluc_027",
+      "question": "鸦片战争爆发于哪一年？",
+      "ground_truth": "1840年",
+      "hallucination_type": "temporal_displacement",
+      "domain": "history",
+      "should_refuse": false,
+      "reference_sources": ["中国近代史"]
+    },
+    {
+      "id": "zh_halluc_028",
+      "question": "维生素C的另一个名字是什么？",
+      "ground_truth": "抗坏血酸",
+      "hallucination_type": "factual_fabrication",
+      "domain": "medicine",
+      "should_refuse": false,
+      "reference_sources": ["营养学"]
+    },
+    {
+      "id": "zh_halluc_029",
+      "question": "圆周率的前几位数字是多少？",
+      "ground_truth": "3.14159...",
+      "hallucination_type": "factual_fabrication",
+      "domain": "science",
+      "should_refuse": false,
+      "reference_sources": ["数学常数"]
+    },
+    {
+      "id": "zh_halluc_030",
+      "question": "中国有多少个省级行政区？",
+      "ground_truth": "34个",
+      "hallucination_type": "factual_fabrication",
+      "domain": "common_sense",
+      "should_refuse": false,
+      "reference_sources": ["行政区划"]
+    },
+    {
+      "id": "zh_halluc_031",
+      "question": "造纸术是谁发明的？",
+      "ground_truth": "蔡伦改进",
+      "hallucination_type": "identity_confusion",
+      "domain": "history",
+      "should_refuse": false,
+      "reference_sources": ["后汉书"]
+    },
+    {
+      "id": "zh_halluc_032",
+      "question": "心脏有几个腔室？",
+      "ground_truth": "4个",
+      "hallucination_type": "factual_fabrication",
+      "domain": "medicine",
+      "should_refuse": false,
+      "reference_sources": ["解剖学"]
+    },
+    {
+      "id": "zh_halluc_033",
+      "question": "水的化学式是什么？",
+      "ground_truth": "H2O",
+      "hallucination_type": "factual_fabrication",
+      "domain": "science",
+      "should_refuse": false,
+      "reference_sources": ["化学基础"]
+    },
+    {
+      "id": "zh_halluc_034",
+      "question": "一小时有多少分钟？",
+      "ground_truth": "60分钟",
+      "hallucination_type": "factual_fabrication",
+      "domain": "common_sense",
+      "should_refuse": false,
+      "reference_sources": ["时间单位"]
+    },
+    {
+      "id": "zh_halluc_035",
+      "question": "孔子出生在哪个朝代？",
+      "ground_truth": "春秋时期",
+      "hallucination_type": "temporal_displacement",
+      "domain": "history",
+      "should_refuse": false,
+      "reference_sources": ["史记·孔子世家"]
+    },
+    {
+      "id": "zh_halluc_036",
+      "question": "红细胞的主要功能是什么？",
+      "ground_truth": "运输氧气",
+      "hallucination_type": "factual_fabrication",
+      "domain": "medicine",
+      "should_refuse": false,
+      "reference_sources": ["血液学"]
+    },
+    {
+      "id": "zh_halluc_037",
+      "question": "声音在空气中的传播速度约为多少？",
+      "ground_truth": "约340米每秒",
+      "hallucination_type": "factual_fabrication",
+      "domain": "science",
+      "should_refuse": false,
+      "reference_sources": ["声学"]
+    },
+    {
+      "id": "zh_halluc_038",
+      "question": "太阳从哪个方向升起？",
+      "ground_truth": "东方",
+      "hallucination_type": "factual_fabrication",
+      "domain": "common_sense",
+      "should_refuse": false,
+      "reference_sources": ["天文常识"]
+    },
+    {
+      "id": "zh_halluc_039",
+      "question": "《史记》的作者是谁？",
+      "ground_truth": "司马迁",
+      "hallucination_type": "identity_confusion",
+      "domain": "history",
+      "should_refuse": false,
+      "reference_sources": ["汉书"]
+    },
+    {
+      "id": "zh_halluc_040",
+      "question": "抗生素对什么有效？",
+      "ground_truth": "细菌感染",
+      "hallucination_type": "causal_error",
+      "domain": "medicine",
+      "should_refuse": false,
+      "reference_sources": ["药理学"]
+    },
+    {
+      "id": "zh_halluc_041",
+      "question": "电子是谁发现的？",
+      "ground_truth": "汤姆森",
+      "hallucination_type": "identity_confusion",
+      "domain": "science",
+      "should_refuse": false,
+      "reference_sources": ["物理学史"]
+    },
+    {
+      "id": "zh_halluc_042",
+      "question": "一年有几个月？",
+      "ground_truth": "12个月",
+      "hallucination_type": "factual_fabrication",
+      "domain": "common_sense",
+      "should_refuse": false,
+      "reference_sources": ["日历知识"]
+    },
+    {
+      "id": "zh_halluc_043",
+      "question": "唐朝是在哪一年建立的？",
+      "ground_truth": "618年",
+      "hallucination_type": "temporal_displacement",
+      "domain": "history",
+      "should_refuse": false,
+      "reference_sources": ["旧唐书"]
+    },
+    {
+      "id": "zh_halluc_044",
+      "question": "吸烟会导致什么疾病？",
+      "ground_truth": "肺癌等多种疾病",
+      "hallucination_type": "causal_error",
+      "domain": "medicine",
+      "should_refuse": false,
+      "reference_sources": ["公共卫生学"]
+    },
+    {
+      "id": "zh_halluc_045",
+      "question": "万有引力定律是谁发现的？",
+      "ground_truth": "牛顿",
+      "hallucination_type": "identity_confusion",
+      "domain": "science",
+      "should_refuse": false,
+      "reference_sources": ["物理学原理"]
+    },
+    {
+      "id": "zh_halluc_046",
+      "question": "大熊猫的主要食物是什么？",
+      "ground_truth": "竹子",
+      "hallucination_type": "factual_fabrication",
+      "domain": "common_sense",
+      "should_refuse": false,
+      "reference_sources": ["动物学"]
+    },
+    {
+      "id": "zh_halluc_047",
+      "question": "指南针是中国哪个朝代发明的？",
+      "ground_truth": "战国时期（司南）",
+      "hallucination_type": "temporal_displacement",
+      "domain": "history",
+      "should_refuse": false,
+      "reference_sources": ["科技史"]
+    },
+    {
+      "id": "zh_halluc_048",
+      "question": "缺乏维生素D会导致什么？",
+      "ground_truth": "佝偻病",
+      "hallucination_type": "causal_error",
+      "domain": "medicine",
+      "should_refuse": false,
+      "reference_sources": ["营养学"]
+    },
+    {
+      "id": "zh_halluc_049",
+      "question": "地球到太阳的平均距离约为多少？",
+      "ground_truth": "约1.5亿公里",
+      "hallucination_type": "factual_fabrication",
+      "domain": "science",
+      "should_refuse": false,
+      "reference_sources": ["天文学"]
+    },
+    {
+      "id": "zh_halluc_050",
+      "question": "中国最长的河流是哪条？",
+      "ground_truth": "长江",
+      "hallucination_type": "factual_fabrication",
+      "domain": "common_sense",
+      "should_refuse": false,
+      "reference_sources": ["地理知识"]
+    },
+    {
+      "id": "zh_halluc_051",
+      "question": "火药是中国哪个朝代发明的？",
+      "ground_truth": "唐朝",
+      "hallucination_type": "temporal_displacement",
+      "domain": "history",
+      "should_refuse": false,
+      "reference_sources": ["中国科技史"]
+    },
+    {
+      "id": "zh_halluc_052",
+      "question": "人体最硬的物质是什么？",
+      "ground_truth": "牙釉质",
+      "hallucination_type": "factual_fabrication",
+      "domain": "medicine",
+      "should_refuse": false,
+      "reference_sources": ["解剖学"]
+    },
+    {
+      "id": "zh_halluc_053",
+      "question": "氧气的化学符号是什么？",
+      "ground_truth": "O2",
+      "hallucination_type": "factual_fabrication",
+      "domain": "science",
+      "should_refuse": false,
+      "reference_sources": ["化学"]
+    },
+    {
+      "id": "zh_halluc_054",
+      "question": "一个世纪有多少年？",
+      "ground_truth": "100年",
+      "hallucination_type": "factual_fabrication",
+      "domain": "common_sense",
+      "should_refuse": false,
+      "reference_sources": ["时间单位"]
+    },
+    {
+      "id": "zh_halluc_055",
+      "question": "宋朝的首都在哪里？",
+      "ground_truth": "开封（北宋）、临安（南宋）",
+      "hallucination_type": "factual_fabrication",
+      "domain": "history",
+      "should_refuse": false,
+      "reference_sources": ["宋史"]
+    },
+    {
+      "id": "zh_halluc_056",
+      "question": "糖尿病的主要症状是什么？",
+      "ground_truth": "多饮多尿多食消瘦",
+      "hallucination_type": "causal_error",
+      "domain": "medicine",
+      "should_refuse": false,
+      "reference_sources": ["内科学"]
+    },
+    {
+      "id": "zh_halluc_057",
+      "question": "地球的卫星叫什么？",
+      "ground_truth": "月球",
+      "hallucination_type": "factual_fabrication",
+      "domain": "science",
+      "should_refuse": false,
+      "reference_sources": ["天文学"]
+    },
+    {
+      "id": "zh_halluc_058",
+      "question": "中国的国花是什么？",
+      "ground_truth": "暂未确定（牡丹为候选）",
+      "hallucination_type": "factual_fabrication",
+      "domain": "common_sense",
+      "should_refuse": false,
+      "reference_sources": ["国家象征"]
+    },
+    {
+      "id": "zh_halluc_059",
+      "question": "印刷术是谁发明的？",
+      "ground_truth": "毕昇（活字印刷）",
+      "hallucination_type": "identity_confusion",
+      "domain": "history",
+      "should_refuse": false,
+      "reference_sources": ["梦溪笔谈"]
+    },
+    {
+      "id": "zh_halluc_060",
+      "question": "肝脏的主要功能是什么？",
+      "ground_truth": "解毒、代谢、合成蛋白质等",
+      "hallucination_type": "factual_fabrication",
+      "domain": "medicine",
+      "should_refuse": false,
+      "reference_sources": ["生理学"]
+    },
+    {
+      "id": "zh_halluc_061",
+      "question": "光合作用需要什么？",
+      "ground_truth": "光、水、二氧化碳",
+      "hallucination_type": "causal_error",
+      "domain": "science",
+      "should_refuse": false,
+      "reference_sources": ["生物学"]
+    },
+    {
+      "id": "zh_halluc_062",
+      "question": "珠穆朗玛峰的海拔是多少？",
+      "ground_truth": "约8848.86米",
+      "hallucination_type": "factual_fabrication",
+      "domain": "common_sense",
+      "should_refuse": false,
+      "reference_sources": ["地理测量"]
+    },
+    {
+      "id": "zh_halluc_063",
+      "question": "汉朝是在哪一年建立的？",
+      "ground_truth": "公元前202年",
+      "hallucination_type": "temporal_displacement",
+      "domain": "history",
+      "should_refuse": false,
+      "reference_sources": ["汉书"]
+    },
+    {
+      "id": "zh_halluc_064",
+      "question": "血压的正常范围是多少？",
+      "ground_truth": "收缩压90-140，舒张压60-90 mmHg",
+      "hallucination_type": "factual_fabrication",
+      "domain": "medicine",
+      "should_refuse": false,
+      "reference_sources": ["内科学"]
+    },
+    {
+      "id": "zh_halluc_065",
+      "question": "原子核由什么组成？",
+      "ground_truth": "质子和中子",
+      "hallucination_type": "factual_fabrication",
+      "domain": "science",
+      "should_refuse": false,
+      "reference_sources": ["原子物理"]
+    },
+    {
+      "id": "zh_halluc_066",
+      "question": "中国最大的淡水湖是哪个？",
+      "ground_truth": "鄱阳湖",
+      "hallucination_type": "factual_fabrication",
+      "domain": "common_sense",
+      "should_refuse": false,
+      "reference_sources": ["地理知识"]
+    },
+    {
+      "id": "zh_halluc_067",
+      "question": "丝绸之路是哪个朝代开辟的？",
+      "ground_truth": "汉朝",
+      "hallucination_type": "temporal_displacement",
+      "domain": "history",
+      "should_refuse": false,
+      "reference_sources": ["汉书·西域传"]
+    },
+    {
+      "id": "zh_halluc_068",
+      "question": "感冒是由什么引起的？",
+      "ground_truth": "主要是病毒",
+      "hallucination_type": "causal_error",
+      "domain": "medicine",
+      "should_refuse": false,
+      "reference_sources": ["传染病学"]
+    },
+    {
+      "id": "zh_halluc_069",
+      "question": "牛顿三大定律中第三定律是什么？",
+      "ground_truth": "作用力与反作用力定律",
+      "hallucination_type": "factual_fabrication",
+      "domain": "science",
+      "should_refuse": false,
+      "reference_sources": ["物理学原理"]
+    },
+    {
+      "id": "zh_halluc_070",
+      "question": "世界上最大的沙漠是哪个？",
+      "ground_truth": "撒哈拉沙漠",
+      "hallucination_type": "factual_fabrication",
+      "domain": "common_sense",
+      "should_refuse": false,
+      "reference_sources": ["地理知识"]
+    },
+    {
+      "id": "zh_halluc_071",
+      "question": "《诗经》是哪个朝代的作品？",
+      "ground_truth": "西周至春秋",
+      "hallucination_type": "temporal_displacement",
+      "domain": "history",
+      "should_refuse": false,
+      "reference_sources": ["文学史"]
+    },
+    {
+      "id": "zh_halluc_072",
+      "question": "人体有多少块骨头？",
+      "ground_truth": "成人206块",
+      "hallucination_type": "factual_fabrication",
+      "domain": "medicine",
+      "should_refuse": false,
+      "reference_sources": ["解剖学"]
+    },
+    {
+      "id": "zh_halluc_073",
+      "question": "酸雨的主要成因是什么？",
+      "ground_truth": "二氧化硫和氮氧化物排放",
+      "hallucination_type": "causal_error",
+      "domain": "science",
+      "should_refuse": false,
+      "reference_sources": ["环境科学"]
+    },
+    {
+      "id": "zh_halluc_074",
+      "question": "一公斤等于多少克？",
+      "ground_truth": "1000克",
+      "hallucination_type": "factual_fabrication",
+      "domain": "common_sense",
+      "should_refuse": false,
+      "reference_sources": ["计量单位"]
+    },
+    {
+      "id": "zh_halluc_075",
+      "question": "元朝是哪个民族建立的？",
+      "ground_truth": "蒙古族",
+      "hallucination_type": "identity_confusion",
+      "domain": "history",
+      "should_refuse": false,
+      "reference_sources": ["元史"]
+    },
+    {
+      "id": "zh_halluc_076",
+      "question": "肾脏的主要功能是什么？",
+      "ground_truth": "过滤血液、形成尿液",
+      "hallucination_type": "factual_fabrication",
+      "domain": "medicine",
+      "should_refuse": false,
+      "reference_sources": ["生理学"]
+    },
+    {
+      "id": "zh_halluc_077",
+      "question": "太阳主要由什么元素组成？",
+      "ground_truth": "氢和氦",
+      "hallucination_type": "factual_fabrication",
+      "domain": "science",
+      "should_refuse": false,
+      "reference_sources": ["天文学"]
+    },
+    {
+      "id": "zh_halluc_078",
+      "question": "中国有几大菜系？",
+      "ground_truth": "八大菜系",
+      "hallucination_type": "factual_fabrication",
+      "domain": "common_sense",
+      "should_refuse": false,
+      "reference_sources": ["饮食文化"]
+    },
+    {
+      "id": "zh_halluc_079",
+      "question": "三国时期是在哪个朝代之后？",
+      "ground_truth": "汉朝之后",
+      "hallucination_type": "temporal_displacement",
+      "domain": "history",
+      "should_refuse": false,
+      "reference_sources": ["三国志"]
+    },
+    {
+      "id": "zh_halluc_080",
+      "question": "高血压会导致什么风险？",
+      "ground_truth": "心脏病、中风等",
+      "hallucination_type": "causal_error",
+      "domain": "medicine",
+      "should_refuse": false,
+      "reference_sources": ["心血管病学"]
+    },
+    {
+      "id": "zh_halluc_081",
+      "question": "电流的单位是什么？",
+      "ground_truth": "安培",
+      "hallucination_type": "factual_fabrication",
+      "domain": "science",
+      "should_refuse": false,
+      "reference_sources": ["电学"]
+    },
+    {
+      "id": "zh_halluc_082",
+      "question": "世界上最高的建筑是什么？",
+      "ground_truth": "哈利法塔（截至2026年）",
+      "hallucination_type": "factual_fabrication",
+      "domain": "common_sense",
+      "should_refuse": false,
+      "reference_sources": ["建筑记录"]
+    },
+    {
+      "id": "zh_halluc_083",
+      "question": "秦朝是在哪一年灭亡的？",
+      "ground_truth": "公元前206年",
+      "hallucination_type": "temporal_displacement",
+      "domain": "history",
+      "should_refuse": false,
+      "reference_sources": ["史记"]
+    },
+    {
+      "id": "zh_halluc_084",
+      "question": "人体最大的关节是哪个？",
+      "ground_truth": "膝关节",
+      "hallucination_type": "factual_fabrication",
+      "domain": "medicine",
+      "should_refuse": false,
+      "reference_sources": ["解剖学"]
+    },
+    {
+      "id": "zh_halluc_085",
+      "question": "温室效应的主要原因是什么？",
+      "ground_truth": "二氧化碳等温室气体排放",
+      "hallucination_type": "causal_error",
+      "domain": "science",
+      "should_refuse": false,
+      "reference_sources": ["气候学"]
+    },
+    {
+      "id": "zh_halluc_086",
+      "question": "中国面积最大的省是哪个？",
+      "ground_truth": "新疆维吾尔自治区",
+      "hallucination_type": "factual_fabrication",
+      "domain": "common_sense",
+      "should_refuse": false,
+      "reference_sources": ["行政区划"]
+    },
+    {
+      "id": "zh_halluc_087",
+      "question": "李白是哪个朝代的诗人？",
+      "ground_truth": "唐朝",
+      "hallucination_type": "temporal_displacement",
+      "domain": "history",
+      "should_refuse": false,
+      "reference_sources": ["唐诗研究"]
+    },
+    {
+      "id": "zh_halluc_088",
+      "question": "疫苗的作用原理是什么？",
+      "ground_truth": "刺激免疫系统产生抗体",
+      "hallucination_type": "causal_error",
+      "domain": "medicine",
+      "should_refuse": false,
+      "reference_sources": ["免疫学"]
+    },
+    {
+      "id": "zh_halluc_089",
+      "question": "海水为什么是咸的？",
+      "ground_truth": "含有溶解的盐类",
+      "hallucination_type": "causal_error",
+      "domain": "science",
+      "should_refuse": false,
+      "reference_sources": ["海洋学"]
+    },
+    {
+      "id": "zh_halluc_090",
+      "question": "一米等于多少厘米？",
+      "ground_truth": "100厘米",
+      "hallucination_type": "factual_fabrication",
+      "domain": "common_sense",
+      "should_refuse": false,
+      "reference_sources": ["计量单位"]
+    },
+    {
+      "id": "zh_halluc_091",
+      "question": "孙中山被称为什么？",
+      "ground_truth": "国父",
+      "hallucination_type": "identity_confusion",
+      "domain": "history",
+      "should_refuse": false,
+      "reference_sources": ["近代史"]
+    },
+    {
+      "id": "zh_halluc_092",
+      "question": "白细胞的主要功能是什么？",
+      "ground_truth": "免疫防御",
+      "hallucination_type": "factual_fabrication",
+      "domain": "medicine",
+      "should_refuse": false,
+      "reference_sources": ["免疫学"]
+    },
+    {
+      "id": "zh_halluc_093",
+      "question": "地球公转周期是多少？",
+      "ground_truth": "约365.25天",
+      "hallucination_type": "temporal_displacement",
+      "domain": "science",
+      "should_refuse": false,
+      "reference_sources": ["天文学"]
+    },
+    {
+      "id": "zh_halluc_094",
+      "question": "中国的国旗是什么颜色？",
+      "ground_truth": "红色底，黄色五星",
+      "hallucination_type": "factual_fabrication",
+      "domain": "common_sense",
+      "should_refuse": false,
+      "reference_sources": ["国家象征"]
+    },
+    {
+      "id": "zh_halluc_095",
+      "question": "清朝是哪一年建立的？",
+      "ground_truth": "1636年（后金改清）或1644年（入关）",
+      "hallucination_type": "temporal_displacement",
+      "domain": "history",
+      "should_refuse": false,
+      "reference_sources": ["清史稿"]
+    },
+    {
+      "id": "zh_halluc_096",
+      "question": "睡眠不足会导致什么问题？",
+      "ground_truth": "注意力下降、免疫力降低等",
+      "hallucination_type": "causal_error",
+      "domain": "medicine",
+      "should_refuse": false,
+      "reference_sources": ["睡眠医学"]
+    },
+    {
+      "id": "zh_halluc_097",
+      "question": "银河系有多少颗恒星？",
+      "ground_truth": "约1000亿到4000亿颗",
+      "hallucination_type": "factual_fabrication",
+      "domain": "science",
+      "should_refuse": false,
+      "reference_sources": ["天文学"]
+    },
+    {
+      "id": "zh_halluc_098",
+      "question": "世界上最长的河流是哪条？",
+      "ground_truth": "尼罗河",
+      "hallucination_type": "factual_fabrication",
+      "domain": "common_sense",
+      "should_refuse": false,
+      "reference_sources": ["地理知识"]
+    },
+    {
+      "id": "zh_halluc_099",
+      "question": "《红楼梦》的作者是谁？",
+      "ground_truth": "曹雪芹",
+      "hallucination_type": "identity_confusion",
+      "domain": "history",
+      "should_refuse": false,
+      "reference_sources": ["文学史"]
+    },
+    {
+      "id": "zh_halluc_100",
+      "question": "地球的大气层主要由什么气体组成？",
+      "ground_truth": "氮气（约78%）和氧气（约21%）",
+      "hallucination_type": "factual_fabrication",
+      "domain": "science",
+      "should_refuse": false,
+      "reference_sources": ["大气科学"]
+    }
+  ]
+}
